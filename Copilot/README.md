@@ -4,6 +4,10 @@ Minimal end-to-end port of PAI onto GitHub Copilot CLI. The goal is to prove
 the shape of the migration, not to ship a full product. See `tasks/todo.md`
 for the full plan and `tasks/lessons.md` for what we learned building this.
 
+> **Using PAI day-to-day?** See [`USER_GUIDE.md`](USER_GUIDE.md) for end-user
+> installation, session usage, skills, rating, voice, and shutdown workflow.
+> This file focuses on spike architecture and status.
+
 ## Layout
 
 ```text

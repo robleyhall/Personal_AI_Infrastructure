@@ -105,7 +105,7 @@ pai
 - ✅ Voice notifications (macOS `say` backend)
 - ✅ 3 core skills: Research, FirstPrinciples, CreateCLI
 
-**Full details →** [`Copilot/README.md`](Copilot/README.md)
+**Full details →** [`Copilot/README.md`](Copilot/README.md) · **User guide →** [`Copilot/USER_GUIDE.md`](Copilot/USER_GUIDE.md)
 
 </details>
 
