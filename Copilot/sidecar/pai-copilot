@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# pai-copilot — sidecar wrapper around `copilot`
+#
+# Replaces PAI's Claude Code hook system (SessionStart / SessionEnd) with
+# shell-level pre/post phases. The AI still handles in-session hooks
+# (UserPromptSubmit, Stop) via instruction-based rules in copilot-instructions.md.
+#
+# Responsibilities:
+#   PRE:   Export env vars, ensure voice server, set tab title, log session start
+#   RUN:   exec copilot with any args the user passed
+#   POST:  Log session end, reset tab title (on normal exit)
+
+set -uo pipefail
+
+PAI_DIR="${PAI_DIR:-$HOME/.pai}"
+PAI_STATE_DIR="$PAI_DIR/state"
+PAI_LOG_DIR="$PAI_DIR/logs"
+PAI_VOICE_URL="${PAI_VOICE_URL:-http://localhost:8888}"
+SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+
+mkdir -p "$PAI_STATE_DIR" "$PAI_LOG_DIR"
+
+log() {
+  printf '%s [pai-copilot] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >>"$PAI_LOG_DIR/sidecar.log"
+}
+
+set_tab_title() {
+  # OSC 0 sets icon + window title in most terminals (iTerm2, Kitty, Terminal.app).
+  printf '\033]0;%s\007' "$1"
+}
+
+start_voice_server() {
+  if curl -sf "$PAI_VOICE_URL/health" >/dev/null 2>&1; then
+    log "voice-server already running"
+    return 0
+  fi
+
+  local start_script="$PAI_DIR/VoiceServer/start.sh"
+  if [[ -x "$start_script" ]]; then
+    "$start_script" >/dev/null 2>&1 || log "voice-server failed to start"
+  else
+    log "voice-server start script not found at $start_script"
+  fi
+}
+
+pre_session() {
+  export PAI_DIR PAI_SESSION_ID="$SESSION_ID"
+
+  set_tab_title "PAI"
+  start_voice_server
+
+  log "session-start id=$SESSION_ID cwd=$PWD"
+  echo "$SESSION_ID $(date -u +%s) start" >>"$PAI_STATE_DIR/sessions.log"
+}
+
+post_session() {
+  local exit_code="$1"
+  log "session-end id=$SESSION_ID exit=$exit_code"
+  echo "$SESSION_ID $(date -u +%s) end $exit_code" >>"$PAI_STATE_DIR/sessions.log"
+  set_tab_title "Terminal"
+}
+
+require_copilot() {
+  if ! command -v copilot >/dev/null 2>&1; then
+    echo "pai-copilot: \`copilot\` CLI not found in PATH." >&2
+    echo "Install: https://docs.github.com/copilot/using-github-copilot/using-github-copilot-in-the-cli" >&2
+    exit 127
+  fi
+}
+
+main() {
+  require_copilot
+  pre_session
+
+  # Forward all args + signals to copilot. We intentionally do NOT wrap stdin/stdout
+  # in a PTY — Copilot CLI manages its own TUI and we want zero interference.
+  copilot "$@"
+  local code=$?
+
+  post_session "$code"
+  exit "$code"
+}
+
+trap 'post_session 130' INT TERM
+
+main "$@"
