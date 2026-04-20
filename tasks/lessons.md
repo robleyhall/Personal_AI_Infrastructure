@@ -74,3 +74,21 @@
 **Fix:** Added a promotion step that stores the full research artifact under `MEMORY/RESEARCH`, then writes only a compact "what matters" digest into `latest.md` and `active.md`.
 
 **Rule:** Persist the full artifact for retrieval, but only promote distilled, durable takeaways into startup memory. Treat startup-loaded files as a cache of what matters, not a log of everything that happened.
+
+
+### Lesson 7: Migration status docs drift unless support files land together
+
+**What happened:** The spike README still implied the Algorithm port was deferred even after the instruction system started depending on Copilot-specific support docs. That made the migration state look less complete than the actual implementation and invited the next session to plan from stale status.
+
+**Fix:** Landed `.github/copilot-instructions.md`, `Copilot/Algorithm.md`, `Copilot/ContextRouting.md`, `Copilot/install.sh`, and `Copilot/README.md` as one coordinated Phase 1 change, and updated `tasks/todo.md` with an explicit Phase 1 status note.
+
+**Rule:** When a migration milestone depends on support docs, installer behavior, and status docs, update all three in the same change. Do not mark a phase complete in README or todo tracking until the support files exist and the installer actually ships them.
+
+
+### Lesson 8: Skills that generate runtime artifacts need installer-backed destinations
+
+**What happened:** Porting `CreateCLI` mechanically rewrote `~/.claude/Bin/...` to `~/.pai/Bin/...`, but that new runtime destination only becomes real if the installer creates it. Without that, the skill would advertise a path that doesn't exist in fresh installs.
+
+**Fix:** Updated `Copilot/install.sh` to create `~/.pai/Bin/` and `~/.pai/USER/SKILLCUSTOMIZATIONS/`, and updated the migration status docs to reflect the new runtime layout.
+
+**Rule:** When porting a skill that writes files to a runtime path, create that path in the installer during the same change. Do not rely on documentation-only path rewrites for generated artifacts.

@@ -29,6 +29,11 @@ detect_shell_rc() {
   esac
 }
 
+append_shell_line() {
+  local line="$1"
+  grep -Fq "$line" "$SHELL_RC" 2>/dev/null || printf '%s\n' "$line" >>"$SHELL_RC"
+}
+
 check_deps() {
   say "checking dependencies…"
   require bash
@@ -41,17 +46,23 @@ check_deps() {
 
 install_tree() {
   say "installing to $PAI_DIR"
-  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/RESEARCH,MEMORY/WORK,USER,state,logs}
+  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,Bin,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/LEARNING/ALGORITHM,MEMORY/LEARNING/SYSTEM,MEMORY/RESEARCH,MEMORY/WORK,MEMORY/WISDOM/FRAMES,MEMORY/RELATIONSHIP,USER/SKILLCUSTOMIZATIONS,state,logs}
 
   rsync -a --delete "$SRC/VoiceServer/" "$PAI_DIR/VoiceServer/"
   rsync -a --delete "$SRC/sidecar/"     "$PAI_DIR/sidecar/"
   rsync -a --delete "$SRC/tools/"       "$PAI_DIR/tools/"
   rsync -a           "$SRC/skills/"      "$PAI_DIR/skills/"
+  install -m 0644 "$SRC/README.md"           "$PAI_DIR/README.md"
+  install -m 0644 "$SRC/Algorithm.md"        "$PAI_DIR/Algorithm.md"
+  install -m 0644 "$SRC/ContextRouting.md"   "$PAI_DIR/ContextRouting.md"
 
   chmod +x \
     "$PAI_DIR/VoiceServer/start.sh" \
     "$PAI_DIR/sidecar/pai-copilot" \
-    "$PAI_DIR/tools/save-research-memory.sh"
+    "$PAI_DIR/tools/save-research-memory.sh" \
+    "$PAI_DIR/tools/capture-rating.sh" \
+    "$PAI_DIR/tools/capture-work-learning.sh" \
+    "$PAI_DIR/tools/learning-readback.sh"
 }
 
 install_alias() {
@@ -64,13 +75,12 @@ install_alias() {
     return
   fi
 
-  if grep -Fq "$line" "$SHELL_RC" 2>/dev/null; then
-    say "alias already present in $SHELL_RC"
-    return
-  fi
-
-  printf '\n# PAI (Copilot edition)\n%s\n' "$line" >>"$SHELL_RC"
-  say "added alias to $SHELL_RC — run: source $SHELL_RC"
+  append_shell_line ""
+  append_shell_line "# PAI (Copilot edition)"
+  append_shell_line "export PAI_DIR=\"\$HOME/.pai\""
+  append_shell_line "export PAI_VOICE_URL=\"http://localhost:8888\""
+  append_shell_line "$line"
+  say "ensured shell exports and alias in $SHELL_RC — run: source $SHELL_RC"
 }
 
 main() {

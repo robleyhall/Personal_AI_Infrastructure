@@ -711,6 +711,12 @@ PAI is deeply coupled to Claude Code in these specific ways:
 - Adapt tool references (Read→view, Write→create, Edit→edit, etc.)
 - Set up environment variables via shell profile instead of settings.json
 
+**Status (2026-04-20):** Done for the spike. `.github/copilot-instructions.md`
+now uses Copilot-compatible tool names, points at repo-local
+`Copilot/Algorithm.md` and `Copilot/ContextRouting.md`, and `Copilot/install.sh`
+copies those docs into `~/.pai/` while exporting `PAI_DIR` and
+`PAI_VOICE_URL`.
+
 ### Phase 2: Skill System Port
 **Goal:** Make skill packs work with Copilot CLI
 
@@ -721,16 +727,35 @@ PAI is deeply coupled to Claude Code in these specific ways:
 - Test each skill pack individually: Research, Security, Telos, ContentAnalysis, etc.
 - Document skills that require Claude Code-specific features and can't be ported
 
+**Status (2026-04-20):** Initial spike implementation is in place. The
+installed Copilot skill set now includes `Research`, `FirstPrinciples`, and
+`CreateCLI`. `CreateCLI` now targets `~/.pai/Bin/` for generated personal CLIs,
+and the installer creates that directory. Remaining packs are still deferred.
+
 ### Phase 3: Memory System Adaptation
 **Goal:** Preserve learning and memory capabilities
 
-- Keep the `~/.claude/MEMORY/` directory structure (it's just files)
+- Keep the `~/.pai/MEMORY/` directory structure (it's just files)
 - Replace hook-based capture with manual/scripted alternatives:
   - Rating capture → bash script or prompt-based ("rate this interaction")
   - Work completion learning → prompt-based capture at session end
   - Session harvesting → adapt `SessionHarvester.ts` to read Copilot session store
 - Port `session_store_sql` queries to replace `projects/` transcript access
 - Adapt learning synthesis tools
+
+**Status (2026-04-20):** Core spike implementation is in place. Three new bash
+tools under `Copilot/tools/`:
+- `capture-rating.sh` — explicit ratings → `ratings.jsonl` + failure capture for ≤ 3
+- `capture-work-learning.sh` — auto-categorised ALGORITHM/SYSTEM learning files
+- `learning-readback.sh` — compact startup digest from recent learnings + failures
+
+The sidecar now materialises `startup-digest.md` before Copilot starts, so
+learning readback is deterministic (not instruction-only). Instructions updated
+to invoke tools at rating events, ALGORITHM Phase 7, and session shutdown.
+
+Deferred for later phases: SessionHarvester (needs transcript format),
+RelationshipMemory (complex inference), LearningPatternSynthesis (batch
+analysis), implicit sentiment detection (needs API key setup).
 
 ### Phase 4: Hook System Replacement
 **Goal:** Replace event-driven hooks with alternative patterns

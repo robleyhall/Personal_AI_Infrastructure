@@ -1,51 +1,71 @@
 # Copilot (Phase 0 Spike) — Overview
 
 Minimal end-to-end port of PAI onto GitHub Copilot CLI. The goal is to prove
-the shape of the migration, not to ship a full product. See
-`tasks/todo.md` for the full plan and `tasks/lessons.md` for what we learned
-building this.
+the shape of the migration, not to ship a full product. See `tasks/todo.md`
+for the full plan and `tasks/lessons.md` for what we learned building this.
 
 ## Layout
 
-```
+```text
 Copilot/
 ├── install.sh              # Installer: copies tree to ~/.pai/, adds shell alias
 ├── README.md               # (this file)
+├── Algorithm.md            # Copilot-adapted 7-phase reference
+├── ContextRouting.md       # Repo-local routing for migration tasks
 ├── VoiceServer/            # Local TTS via macOS `say` (replaces ElevenLabs)
 │   ├── server.ts
 │   ├── start.sh
 │   └── README.md
 ├── sidecar/
 │   └── pai-copilot         # Shell wrapper around `copilot` (replaces hooks)
+├── tools/
+│   ├── capture-rating.sh       # Explicit rating → ratings.jsonl + failure capture
+│   ├── capture-work-learning.sh # Session learning → ALGORITHM/ or SYSTEM/
+│   ├── learning-readback.sh     # Compact startup digest from recent learnings
+│   └── save-research-memory.sh  # Research artifact + promotion to startup memory
 └── skills/
-    └── Research/           # Ported Research skill (only skill in the spike)
-        └── PORTING_NOTES.md
+    ├── Research/           # Ported research workflows
+    ├── FirstPrinciples/    # Reasoning from fundamentals
+    └── CreateCLI/          # CLI generation workflows
 ```
 
 ## What's in the spike
 
-| Piece                      | Status | Notes                                      |
-|----------------------------|--------|--------------------------------------------|
-| Install path `~/.pai/`     | ✅     | Decided; mechanical `sed` applied          |
-| Copilot-only fork          | ✅     | No dual support; Claude Code refs removed  |
-| `copilot-instructions.md`  | ✅     | LoadContext + 3 modes + voice + ratings    |
-| Sidecar wrapper            | ✅     | ~80 lines bash, no PTY                     |
-| Voice server (`say`)       | ✅     | Drop-in `POST /notify`, no API key         |
-| Research skill             | ✅     | Mechanical port; see `PORTING_NOTES.md`    |
-| Research memory promotion  | ✅     | Saves artifacts + compact `what matters` digest |
-| `gh models` for inference  | ⏭️     | Deferred until we have a real rating-volume signal |
-| Other 11 skill packs       | ⏭️     | Out of scope for spike                     |
-| `Algorithm v3.7.0` port    | ⏭️     | Referenced from instructions, not yet ported |
-| GitHub Actions             | ⏭️     | Deferred                                   |
-| PTY wrapper                | ⏭️     | Sidecar first; revisit only if fidelity gaps hurt |
+| Piece | Status | Notes |
+|---|---|---|
+| Install path `~/.pai/` | ✅ | Decided; mechanical `sed` applied |
+| Copilot-only fork | ✅ | No dual support; Claude Code refs removed |
+| `copilot-instructions.md` | ✅ | Modes, routing, Algorithm, voice, ratings, memory |
+| `ContextRouting.md` | ✅ | Repo-local + installed-runtime path map |
+| `Algorithm.md` | ✅ | Copilot-adapted ISC and 7-phase reference |
+| Sidecar wrapper | ✅ | Pre-session digest materialisation + voice startup |
+| Voice server (`say`) | ✅ | Drop-in `POST /notify`, no API key |
+| Research skill | ✅ | Mechanical port; see `PORTING_NOTES.md` |
+| FirstPrinciples skill | ✅ | Ported with Copilot-safe runtime paths |
+| CreateCLI skill | ✅ | Ported to `~/.pai/Bin` and shipped in spike |
+| Research memory promotion | ✅ | Saves artifacts + compact `what matters` digest |
+| Rating capture | ✅ | `capture-rating.sh` — explicit ratings → `ratings.jsonl` |
+| Work learning capture | ✅ | `capture-work-learning.sh` — auto-categorised ALGORITHM/SYSTEM |
+| Startup learning readback | ✅ | `learning-readback.sh` — sidecar materialises `startup-digest.md` |
+| `gh models` for inference | ⏭️ | Deferred until we have a real rating-volume signal |
+| Session harvester | ⏭️ | Needs transcript format; deferred |
+| Relationship memory | ⏭️ | Complex inference; deferred |
+| Pattern synthesis | ⏭️ | Batch analysis of ratings; deferred |
+| Other skill packs | ⏭️ | Out of scope for spike |
+| GitHub Actions | ⏭️ | Deferred |
+| PTY wrapper | ⏭️ | Sidecar first; revisit only if fidelity gaps hurt |
 
 ## Install and run
 
 ```bash
 ./Copilot/install.sh
 source ~/.zshrc       # (or restart shell)
-pai                    # launches copilot via the sidecar
+pai                   # launches copilot via the sidecar
 ```
+
+The installer now also copies `Algorithm.md` and `ContextRouting.md` into
+`~/.pai/`, creates `~/.pai/Bin/` for generated personal CLIs, and adds
+`PAI_DIR` plus `PAI_VOICE_URL` exports to the shell profile.
 
 ## Verify
 
@@ -59,14 +79,30 @@ curl -sS -X POST http://localhost:8888/notify \
 ~/.pai/sidecar/pai-copilot --version    # should pass through to copilot --version
 
 # 3. Instructions loaded
-# In a `pai` session, first response should start with a mode header
-# (MINIMAL / NATIVE / ALGORITHM) per copilot-instructions.md §2.
+# In a `pai` session, the first response should start with a mode header
+# (MINIMAL / NATIVE / ALGORITHM) per .github/copilot-instructions.md §2.
 
 # 4. Research memory promotion
 cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "test topic" --mode "quick"
 - One durable insight
 - One useful follow-up
 EOF
+
+# 5. Rating capture
+~/.pai/tools/capture-rating.sh --rating 8 --summary "test rating"
+cat ~/.pai/MEMORY/LEARNING/SIGNALS/ratings.jsonl
+
+# 6. Work learning capture
+echo "Test learning" | ~/.pai/tools/capture-work-learning.sh --slug "test"
+find ~/.pai/MEMORY/LEARNING/ -name '*.md' -type f
+
+# 7. Learning readback
+~/.pai/tools/learning-readback.sh
+
+# 8. New skills loaded
+# In a `pai` session, try:
+# "Think about this from first principles: should this be a microservice?"
+# "Create a CLI for the GitHub API that lists my repos"
 ```
 
 ## Known friction

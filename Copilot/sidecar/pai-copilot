@@ -43,11 +43,24 @@ start_voice_server() {
   fi
 }
 
+materialize_startup_digest() {
+  # Deterministic: generate the learning digest *before* Copilot starts so
+  # the instruction file can reference a static file rather than relying on
+  # the AI remembering to run a script.
+  local readback="$PAI_DIR/tools/learning-readback.sh"
+  local digest_file="$PAI_DIR/MEMORY/LEARNING/startup-digest.md"
+  if [[ -x "$readback" ]]; then
+    "$readback" > "$digest_file" 2>/dev/null || true
+    log "startup-digest materialised ($(wc -c < "$digest_file" | tr -d ' ') bytes)"
+  fi
+}
+
 pre_session() {
   export PAI_DIR PAI_SESSION_ID="$SESSION_ID"
 
   set_tab_title "PAI"
   start_voice_server
+  materialize_startup_digest
 
   log "session-start id=$SESSION_ID cwd=$PWD"
   echo "$SESSION_ID $(date -u +%s) start" >>"$PAI_STATE_DIR/sessions.log"
