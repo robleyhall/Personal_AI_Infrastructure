@@ -119,6 +119,16 @@ WebFetch(url, "Confirm article exists and summarize main point")
 
 **Extensive mode generates MANY URLs - allocate time for verification.**
 
+### Step 5: Save "What Matters" Memory
+
+Before finishing, persist the compact takeaway:
+
+```bash
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "[topic]" --mode "extensive" --sources "[verified urls]" --next "[optional next action]"
+[5-12 bullets of what matters]
+EOF
+```
+
 ### Step 5: Return Results
 
 ```markdown

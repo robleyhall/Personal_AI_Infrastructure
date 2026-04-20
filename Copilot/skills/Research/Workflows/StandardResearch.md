@@ -90,6 +90,16 @@ WebFetch(url, "Confirm article exists and summarize main point")
 🎯 COMPLETED: Research on [topic] complete
 ```
 
+### Step 6: Save "What Matters" Memory
+
+Before finishing, persist the compact takeaway:
+
+```bash
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "[topic]" --mode "standard" --sources "[verified urls]" --next "[optional next action]"
+[5-12 bullets of what matters]
+EOF
+```
+
 ## Speed Target
 
 ~15-30 seconds for results

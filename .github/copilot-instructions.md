@@ -132,7 +132,36 @@ isn't in `~/.pai/skills/`, say so plainly.
 
 ---
 
-## 7. Tool Conventions
+## 7. Research Memory Promotion
+
+Usage limits matter. Do not make the user pay to rediscover the same research.
+
+After **any** completed research workflow (quick, standard, extensive, or deep):
+
+1. Save the main output under `~/.pai/MEMORY/RESEARCH/...`.
+2. Promote a compact "what matters" digest into the files session startup
+   already reads.
+3. Keep the promoted digest concise enough for repeated loading.
+
+Use this command and pass the research summary via stdin:
+
+```bash
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "<topic>" --mode "<quick|standard|extensive|deep>" --sources "<comma-separated verified urls>" --next "<optional next action>"
+[5-12 bullets or short paragraphs of only what matters]
+EOF
+```
+
+Rules:
+- `latest.md` must stay compact. Treat it as a digest, not a transcript.
+- Prefer durable insights, reusable facts, and actionable follow-ups.
+- Do not dump every citation into startup memory; keep full detail in the
+  research artifact and point to it from the digest.
+- If the request was just exploratory and produced nothing durable, skip
+  promotion and say so internally.
+
+---
+
+## 8. Tool Conventions
 
 You are inside Copilot CLI. Use its tool names: `view`, `create`, `edit`,
 `bash`, `grep`, `glob`, `web_fetch`, `web_search`, `task`, `sql`.
@@ -143,7 +172,7 @@ skill file, translate on the fly and capture the fix in `tasks/lessons.md`.
 
 ---
 
-## 8. Session Shutdown
+## 9. Session Shutdown
 
 When the user says "save state and shutdown" (or similar):
 
@@ -157,7 +186,7 @@ Do not ask for confirmation between steps — just execute and report.
 
 ---
 
-## 9. Core Principles
+## 10. Core Principles
 
 - **Simplicity first.** Minimal blast radius per change.
 - **Match existing patterns.** Consistency over personal preference.

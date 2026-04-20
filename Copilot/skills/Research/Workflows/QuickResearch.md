@@ -44,6 +44,16 @@ Report findings using standard format:
 🎯 COMPLETED: Quick answer on [topic]
 ```
 
+### Step 3: Save "What Matters" Memory
+
+Before finishing, persist the compact takeaway:
+
+```bash
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "[topic]" --mode "quick" --sources "[verified urls]" --next "[optional next action]"
+[5-12 bullets of what matters]
+EOF
+```
+
 ## Speed Target
 
 ~10-15 seconds for results

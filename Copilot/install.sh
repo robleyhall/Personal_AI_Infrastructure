@@ -41,13 +41,17 @@ check_deps() {
 
 install_tree() {
   say "installing to $PAI_DIR"
-  mkdir -p "$PAI_DIR"/{skills,VoiceServer,sidecar,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/WORK,USER,state,logs}
+  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/RESEARCH,MEMORY/WORK,USER,state,logs}
 
   rsync -a --delete "$SRC/VoiceServer/" "$PAI_DIR/VoiceServer/"
   rsync -a --delete "$SRC/sidecar/"     "$PAI_DIR/sidecar/"
+  rsync -a --delete "$SRC/tools/"       "$PAI_DIR/tools/"
   rsync -a           "$SRC/skills/"      "$PAI_DIR/skills/"
 
-  chmod +x "$PAI_DIR/VoiceServer/start.sh" "$PAI_DIR/sidecar/pai-copilot"
+  chmod +x \
+    "$PAI_DIR/VoiceServer/start.sh" \
+    "$PAI_DIR/sidecar/pai-copilot" \
+    "$PAI_DIR/tools/save-research-memory.sh"
 }
 
 install_alias() {

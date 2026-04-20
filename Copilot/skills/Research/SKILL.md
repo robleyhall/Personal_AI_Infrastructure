@@ -145,6 +145,30 @@ See `Workflows/DeepInvestigation.md` for full workflow details.
 
 ---
 
+## Memory Promotion (Required)
+
+After any Research workflow completes, save the output twice:
+
+1. **Full artifact** in `~/.pai/MEMORY/RESEARCH/...` for later retrieval.
+2. **Compact "what matters" digest** promoted into startup memory so future
+   sessions do not need to reread the whole artifact.
+
+Use:
+
+```bash
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "<topic>" --mode "<quick|standard|extensive|deep>" --sources "<comma-separated verified urls>" --next "<optional next action>"
+[5-12 bullets or short paragraphs with only what matters]
+EOF
+```
+
+Promotion rules:
+- Keep the digest short enough to reload frequently without wasting usage.
+- Store the durable insight, not every intermediate search note.
+- Put exhaustive detail in the research artifact, not the promoted memory.
+- If the workflow produced no durable insight, skip promotion.
+
+---
+
 ## File Organization
 
 **Working files (temporary work artifacts):** `~/.pai/MEMORY/WORK/{current_work}/`

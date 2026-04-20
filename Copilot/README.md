@@ -32,6 +32,7 @@ Copilot/
 | Sidecar wrapper            | ✅     | ~80 lines bash, no PTY                     |
 | Voice server (`say`)       | ✅     | Drop-in `POST /notify`, no API key         |
 | Research skill             | ✅     | Mechanical port; see `PORTING_NOTES.md`    |
+| Research memory promotion  | ✅     | Saves artifacts + compact `what matters` digest |
 | `gh models` for inference  | ⏭️     | Deferred until we have a real rating-volume signal |
 | Other 11 skill packs       | ⏭️     | Out of scope for spike                     |
 | `Algorithm v3.7.0` port    | ⏭️     | Referenced from instructions, not yet ported |
@@ -60,6 +61,12 @@ curl -sS -X POST http://localhost:8888/notify \
 # 3. Instructions loaded
 # In a `pai` session, first response should start with a mode header
 # (MINIMAL / NATIVE / ALGORITHM) per copilot-instructions.md §2.
+
+# 4. Research memory promotion
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "test topic" --mode "quick"
+- One durable insight
+- One useful follow-up
+EOF
 ```
 
 ## Known friction
