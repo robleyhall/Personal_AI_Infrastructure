@@ -92,3 +92,22 @@
 **Fix:** Updated `Copilot/install.sh` to create `~/.pai/Bin/` and `~/.pai/USER/SKILLCUSTOMIZATIONS/`, and updated the migration status docs to reflect the new runtime layout.
 
 **Rule:** When porting a skill that writes files to a runtime path, create that path in the installer during the same change. Do not rely on documentation-only path rewrites for generated artifacts.
+
+
+## Session: 2026-04-20 — Phase 3 memory system adaptation
+
+### Lesson 9: Startup readback must be deterministic, not instruction-only
+
+**What happened:** Initial plan had the AI running `learning-readback.sh` at session start via an instruction rule. Rubber-duck critique pointed out that if the AI forgets, the entire memory system feels broken.
+
+**Fix:** Made the sidecar wrapper materialise `startup-digest.md` *before* Copilot starts, so the instruction file just reads a static file. Instruction-based invocation remains as fallback.
+
+**Rule:** For any session-start behavior that is foundational (context loading, memory readback), materialise the result into a file during the sidecar pre-session phase rather than relying solely on AI instruction compliance.
+
+### Lesson 10: Use python3 for JSON serialisation in bash scripts
+
+**What happened:** Rating capture needs to write JSON lines. Shell-only JSON escaping (`printf`, `jq`) is fragile with special characters in user comments and summaries.
+
+**Fix:** Used inline `python3 -c "import json; ..."` for reliable JSON serialisation. Python 3 is ubiquitous on macOS and Linux.
+
+**Rule:** When a bash tool needs to produce structured data (JSON, YAML), delegate serialisation to `python3 -c` rather than hand-rolling escape sequences in shell.
