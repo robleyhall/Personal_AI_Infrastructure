@@ -775,6 +775,18 @@ Since Copilot CLI has no hook system, each hook needs a different strategy:
 | `SessionCleanup.hook.ts` | Manual or cron-based cleanup |
 | Others | Case-by-case — most are nice-to-have, not critical |
 
+**Status (2026-04-20):** Done. All 20 hooks accounted for:
+- **6 CRITICAL/HIGH hooks** replaced by instruction rules (§ 3 Voice, § 4 Rating,
+  § 5 Learning, § 12 Security, § 13 Relationship, § 14 Active Work Tracking)
+- **Sidecar** handles session lifecycle (env vars, voice server, tab title,
+  startup digest materialisation, stale-state cleanup on exit)
+- **14 cosmetic/analytics hooks** explicitly dropped (tab title variants,
+  SessionAutoName, UpdateCounts, DocIntegrity, AgentExecutionGuard, etc.)
+- Security rules use a tiered model: never-read secrets, read-only infra,
+  never-run catastrophic, explicit-confirm destructive ops
+- RelationshipMemory scoped to explicit shutdown + ALGORITHM end only,
+  user-stated facts only (best-effort)
+
 ### Phase 5: Installer & Onboarding
 **Goal:** Create a Copilot-compatible installation flow
 
@@ -791,12 +803,29 @@ Since Copilot CLI has no hook system, each hook needs a different strategy:
   - Sets environment variables
   - Optionally starts voice server
 
+**Status (2026-04-20):** Done. `Copilot/install.sh` is idempotent and handles:
+- Dependency checks (bash, curl, git; warns on missing bun/copilot/say)
+- Full directory tree creation under `~/.pai/` (skills, tools, VoiceServer,
+  sidecar, Bin, MEMORY/*, USER/*, state, logs)
+- rsync of all runtime artifacts from repo
+- Shell RC setup (PAI_DIR, PAI_VOICE_URL exports + `pai` alias)
+- `pai-copilot` sidecar wrapper handles session lifecycle
+- `.github/copilot-instructions.md` is repo-local (not installed globally)
+
 ### Phase 6: GitHub Actions Workflows
 **Goal:** Replace Claude Code Actions with Copilot equivalents
 
 - Replace `claude.yml` workflow with Copilot equivalent (if available)
 - Replace `claude-code-review.yml` with Copilot-based review
 - These are nice-to-have, not critical for personal use
+
+**Status (2026-04-20):** Done. Created `.github/copilot-setup-steps.yml` which
+configures the Copilot coding agent environment (installs Bun + PAI runtime).
+- Coding agent: assign `@copilot` to issues or mention in comments (replaces
+  `claude.yml` + `claude-code-action`)
+- Code review: Copilot's built-in PR review (settings-based, no workflow needed;
+  replaces `claude-code-review.yml`)
+- Original Claude workflows preserved for upstream compatibility
 
 ---
 
