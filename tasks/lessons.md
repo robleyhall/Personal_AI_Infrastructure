@@ -111,3 +111,30 @@
 **Fix:** Used inline `python3 -c "import json; ..."` for reliable JSON serialisation. Python 3 is ubiquitous on macOS and Linux.
 
 **Rule:** When a bash tool needs to produce structured data (JSON, YAML), delegate serialisation to `python3 -c` rather than hand-rolling escape sequences in shell.
+
+
+## Session: 2026-04-20 — T3 skills live-test
+
+### Lesson 11: Mechanical skill ports carry stale path references
+
+**What happened:** Live-testing the 5 T3 skills (Aphorisms, PAIUpgrade, Prompting, Evals, Fabric) surfaced 3 systemic path bugs left by the batch substitution port: `~/.pai/PAI/USER/` (31 files, upstream's `.claude/PAI/USER/` collapsed wrong), `~/.pai/skills/Utilities/` (17 files, upstream had a `Utilities/` wrapper that the port flattened), and `~/.pai/skills/aphorisms/` (5 files, lowercase vs capital `A`). Only Aphorisms and Fabric worked out of the box; Prompting, Evals, and PAIUpgrade were non-functional.
+
+**Fix:** Three trivial global seds clear most of the damage; see `~/.pai/MEMORY/WORK/20260420T135254Z_t3-skills-live-test/GAPS.md` for the enumerated fixes.
+
+**Rule:** After any mechanical batch port of skills, grep the ported tree for every installed path token (e.g. `~/.pai/PAI/`, `skills/Utilities/`, lowercase/wrong-case variants of every skill name) and run a live smoke test of at least one workflow per skill before declaring the milestone done. Path-only sed is insufficient — the substitution rules need to know both the *source* layout and the *destination* layout.
+
+### Lesson 12: Workflows that consume hook-generated data break silently when hooks are dropped
+
+**What happened:** PAIUpgrade's `MineReflections` workflow expects `~/.pai/MEMORY/LEARNING/REFLECTIONS/algorithm-reflections.jsonl`. That file was produced by a Claude Code hook in upstream PAI, and the hook was dropped in Phase 4 of this port. The workflow was carried forward verbatim and is now unable to execute — there is no data to mine.
+
+**Fix:** Either extend `capture-work-learning.sh` to emit structured JSONL alongside its markdown output, or rewrite `MineReflections` to consume the markdown files directly under `ALGORITHM/`, `FAILURES/`, `SYSTEM/`.
+
+**Rule:** When dropping a hook in a migration, audit every skill/workflow that references the hook's output path. Either port the hook's data-generation logic (to a script or an instruction) or rewrite the downstream workflow to use the new data shape. Don't carry forward workflows whose inputs no longer exist.
+
+### Lesson 13: TypeScript skill tools need per-skill `package.json` + installer `bun install`
+
+**What happened:** `Prompting/Tools/RenderTemplate.ts` imports `handlebars` and `yaml` but the installed `~/.pai/skills/Prompting/` has no `package.json` and no `node_modules/`. `bun run` fails with a missing-package error. The installer was never extended to set up per-skill npm dependencies.
+
+**Fix:** Add `package.json` to the skill source, and teach `Copilot/install.sh` to run `bun install` inside any `~/.pai/skills/*/` that has a `package.json` (Telos already has two — the pattern exists but isn't automated).
+
+**Rule:** Any TypeScript tool in a skill that imports third-party packages must ship with a `package.json` alongside it, and the installer must run `bun install` in every skill dir that has one. Document this in `Copilot/skills/PORTING_NOTES.md` as a port acceptance criterion.
