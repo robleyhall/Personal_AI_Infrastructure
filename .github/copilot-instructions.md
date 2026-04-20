@@ -170,7 +170,7 @@ runtime state and personal memory only.
 
 The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**, **USMetrics**,
-**Security**, **Parser**, **Documents**, **CreateSkill**, **Media** (Mermaid only), **Delegation** (degraded).
+**Security**, **Parser**, **Documents**, **CreateSkill**, **Media** (Mermaid only), **Delegation** (degraded), **Aphorisms**, **PAIUpgrade**, **Prompting**, **Evals** (degraded), **Fabric** (reference patterns).
 
 | User says | Action |
 |---|---|
@@ -196,6 +196,11 @@ The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 | "create a skill …" / "new skill …" / "scaffold skill …" / "validate skill …" / "update skill …" / "canonicalize skill …" | Read `Copilot/skills/CreateSkill/SKILL.md` |
 | "mermaid …" / "flowchart …" / "technical diagram …" (code-renderable) | Read `Copilot/skills/Media/SKILL.md` (only the Mermaid workflow is verified; image-gen workflows are API-gated) |
 | "delegate …" / "parallel execution …" / "agent team …" / "swarm …" / "3+ workstreams …" | Read `Copilot/skills/Delegation/SKILL.md` — note the Copilot Spike Status at the top; teams/swarms fall back to parallel `task` calls |
+| "find an aphorism …" / "quote for …" / "add aphorism …" / "research thinker …" | Read `Copilot/skills/Aphorisms/SKILL.md` |
+| "check for PAI upgrades …" / "Anthropic changes …" / "mine reflections …" / "upgrade system …" | Read `Copilot/skills/PAIUpgrade/SKILL.md` — Anthropic changelog tool needs `ANTHROPIC_API_KEY`; fails fast without it |
+| "meta-prompt …" / "render template …" / "validate template …" / "optimize this prompt …" / "compose prompt from primitives …" | Read `Copilot/skills/Prompting/SKILL.md` (Handlebars-based template system) |
+| "run eval …" / "benchmark agent …" / "compare models …" / "compare prompts …" / "create judge …" / "regression test agent behavior …" | Read `Copilot/skills/Evals/SKILL.md` — model-based graders collapse to a single `general-purpose` agent; pairwise comparison is degraded |
+| "fabric pattern …" / "apply fabric …" / "extract wisdom via fabric …" / "find fabric pattern for …" | Read `Copilot/skills/Fabric/SKILL.md` — 240+ pattern `system.md` files are reference prompts. There is no bundled `fabric` CLI in the spike; either paste a pattern into a `task` prompt or install the upstream Fabric CLI separately |
 
 In an installed runtime outside this repository, the equivalent paths use
 `~/.pai/skills/<Name>/` instead of `Copilot/skills/<Name>/`.

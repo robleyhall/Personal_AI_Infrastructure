@@ -132,3 +132,79 @@ Three additions from the 30-day eval plan (session folder `plan.md`):
   list hits most engineering summaries. User may manually move ALGORITHM
   items if the imbalance becomes a problem.
 
+## Tier-3 30-day eval additions (2026-04-20)
+
+Milestone 3 of the eval plan. User expanded the default T3 scope
+(LearningPatternSynthesis only) to include **all five opportunistic
+Utilities skills** in one batch. Standard `PORTING_NOTES.md` substitution
+table applied via `_port-skill.sh` (helper removed after use).
+
+### synthesize-learnings (`Copilot/tools/synthesize-learnings.{ts,sh}`)
+- Port of `Releases/v4.0.3/.claude/PAI/Tools/LearningPatternSynthesis.ts`.
+  TS tool renamed for clarity; `.sh` wrapper forwards all flags through
+  `bun run`.
+- Path substitution: `CLAUDE_DIR` → `PAI_DIR`, `~/.claude/` → `~/.pai/`.
+- **Schema bridge added:** upstream TS expected
+  `{timestamp, session_id, sentiment_summary, confidence}` but
+  `capture-rating.sh` writes `{ts, session, summary}`. Port normalizes
+  both schemas at parse time (`raw.timestamp ?? raw.ts`, etc.). Without
+  this shim every rating was filtered out as "Invalid Date".
+- Smoke test: `./Copilot/tools/synthesize-learnings.sh --dry-run --all`
+  correctly loads and analyses existing `ratings.jsonl` entries.
+- **Signal note:** the plan calls for ≥ 3 weeks of accumulated ratings
+  before outputs are meaningful. Shipping the port now; first useful run
+  is around eval week 3.
+
+### Aphorisms (`Copilot/skills/Aphorisms/`)
+- Mechanical port (6 files, all markdown). Database + 4 workflows + SKILL.md.
+- No code dependencies.
+- `Database/aphorisms.md` is plain text and carries no Claude-era tool references.
+
+### PAIUpgrade (`Copilot/skills/PAIUpgrade/`)
+- Mechanical port (11 files). Includes `Tools/Anthropic.ts` changelog
+  fetcher and YouTube monitoring workflow.
+- Fixed one residual path the sed pass missed:
+  `join(HOME, '.claude', 'skills', 'PAIUpgrade')` → `join(HOME, '.pai', 'skills', 'PAIUpgrade')`
+  (comma-separated form, not caught by `~/.claude` / `$HOME/.claude` regexes).
+- External URL references to `docs.claude.com`, `support.claude.com`,
+  `platform.claude.com` are **intentionally preserved** — those are real
+  public documentation endpoints, not filesystem paths.
+- Dep: `ANTHROPIC_API_KEY` for `Tools/Anthropic.ts`. Fails fast without it.
+
+### Prompting (`Copilot/skills/Prompting/`)
+- Mechanical port (28 files). Handlebars template system with
+  `RenderTemplate.ts` / `ValidateTemplate.ts` and a `Templates/` tree
+  (Primitives, Evals, Data).
+- Self-contained bun project under `Templates/Tools/` with its own
+  `package.json` / `bun.lock`; user runs `bun install` there on first
+  use.
+- One residual rollback doc rewrote `cd ~/.claude` → `cd ~/.pai` manually
+  (outside the standard substitution set).
+- External URL references to `platform.claude.com` docs preserved.
+
+### Evals (`Copilot/skills/Evals/`)
+- Mechanical port (38 files). TS grader framework (`Graders/Base.ts`,
+  `Graders/CodeBased/*`, `Graders/ModelBased/*`), workflow docs, regression
+  suite, and `Tools/*.ts` (TrialRunner, TranscriptCapture, SuiteManager,
+  FailureToTask, AlgorithmBridge).
+- **Degraded form — same class as Delegation.** `Graders/ModelBased/*.ts`
+  (`LLMRubric`, `PairwiseComparison`, `NaturalLanguageAssert`) were
+  designed for model-diverse sub-agents via Claude Code's custom
+  `subagent_type`. Under Copilot they all collapse to
+  `agent_type: "general-purpose"`. Pairwise comparison between providers
+  is **not possible** in the spike — it compares a single model against
+  itself. Useful for regression / rubric grading; not for model bake-offs.
+- No special deps; runs under bun.
+
+### Fabric (`Copilot/skills/Fabric/`)
+- Mechanical port (318 files). Overwhelmingly `Patterns/*/system.md` and
+  `Patterns/*/user.md` prompt files originally designed for the
+  upstream [Fabric CLI](https://github.com/danielmiessler/fabric).
+- **No Fabric CLI is bundled with the Copilot spike.** Patterns are
+  reference prompt templates — use by either (a) reading the relevant
+  `system.md` and pasting its content into a `task` prompt, or (b)
+  installing the upstream Fabric CLI separately and pointing it at this
+  directory.
+- The substitution pass only touched a handful of files (the SKILL.md
+  and a couple of meta-patterns that referenced Claude-era tool names).
+  The 318 pattern files themselves are pure LLM system prompts.

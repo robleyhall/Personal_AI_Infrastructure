@@ -728,20 +728,30 @@ copies those docs into `~/.pai/` while exporting `PAI_DIR` and
 - Document skills that require Claude Code-specific features and can't be ported
 
 **Status (2026-04-20):** Expanded. The installed Copilot skill set now includes
-14 skills: `Research`, `FirstPrinciples`, `CreateCLI`, `Telos`, `Thinking`,
+**19 skills**: `Research`, `FirstPrinciples`, `CreateCLI`, `Telos`, `Thinking`,
 `Investigation`, `ContentAnalysis`, `USMetrics`, `Security`, **`Parser`**,
 **`Documents` (PDF only)**, **`CreateSkill`**, **`Media` (Mermaid only)**,
-**`Delegation` (degraded)**. Parser and Documents/Pdf are T1 eval additions;
-CreateSkill, Media, and Delegation are T2. All ports are mechanical batch
-substitutions — see `Copilot/skills/PORTING_NOTES.md` for the substitution
-log and known gaps. Model diversity across sub-agents is lost (all run under
-`general-purpose`). Delegation carries a degraded-form banner: Claude-Code-
-only `TeamCreate`/`TaskCreate`/`SendMessage` are **not available** in Copilot
-and fall back to parallel `task` calls coordinated via files or SQL.
+**`Delegation` (degraded)**, **`Aphorisms`**, **`PAIUpgrade`**,
+**`Prompting`**, **`Evals` (degraded)**, **`Fabric` (reference patterns)**.
+Parser and Documents/Pdf are T1 eval additions; CreateSkill, Media, and
+Delegation are T2; Aphorisms, PAIUpgrade, Prompting, Evals, and Fabric are T3
+(Milestone 3 of the 30-day eval plan — user expanded the default "don't
+batch" T3 scope to include all five opportunistic utilities). All ports are
+mechanical batch substitutions — see `Copilot/skills/PORTING_NOTES.md` for
+the substitution log and known gaps. Model diversity across sub-agents is
+lost (all run under `general-purpose`). Delegation carries a degraded-form
+banner: Claude-Code- only `TeamCreate`/`TaskCreate`/`SendMessage` are **not
+available** in Copilot and fall back to parallel `task` calls coordinated
+via files or SQL. Evals is similarly degraded: `Graders/ModelBased/*`
+collapses to a single provider — useful for regression/rubric grading but
+**cannot** do cross-provider bake-offs. Fabric ships as reference prompt
+patterns only — the upstream Fabric CLI is not bundled.
+Also shipped in T3: `Copilot/tools/synthesize-learnings.{ts,sh}` (port of
+`LearningPatternSynthesis.ts`) with a schema bridge for the Copilot
+`ratings.jsonl` format.
 Deferred: Agents (needs multi-model redesign), Media/Remotion,
 Media/Art image-gen workflows (API-gated), Scraping, remaining Utilities
-sub-skills (Evals, Fabric, PAIUpgrade, Prompting, Aphorisms, Cloudflare,
-Browser, AudioEditor), Documents/Docx/Xlsx/Pptx.
+sub-skills (Cloudflare, Browser, AudioEditor), Documents/Docx/Xlsx/Pptx.
 
 ### Phase 3: Memory System Adaptation
 **Goal:** Preserve learning and memory capabilities
