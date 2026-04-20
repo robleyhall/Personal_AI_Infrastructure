@@ -727,10 +727,13 @@ copies those docs into `~/.pai/` while exporting `PAI_DIR` and
 - Test each skill pack individually: Research, Security, Telos, ContentAnalysis, etc.
 - Document skills that require Claude Code-specific features and can't be ported
 
-**Status (2026-04-20):** Initial spike implementation is in place. The
-installed Copilot skill set now includes `Research`, `FirstPrinciples`, and
-`CreateCLI`. `CreateCLI` now targets `~/.pai/Bin/` for generated personal CLIs,
-and the installer creates that directory. Remaining packs are still deferred.
+**Status (2026-04-20):** Expanded. The installed Copilot skill set now includes
+9 skills: `Research`, `FirstPrinciples`, `CreateCLI`, `Telos`, `Thinking`,
+`Investigation`, `ContentAnalysis`, `USMetrics`, `Security`. All 6 new ports
+are mechanical batch substitutions — see `Copilot/skills/PORTING_NOTES.md` for
+the substitution log and known gaps. Model diversity across sub-agents is lost
+(all run under `general-purpose`). Deferred: Agents (needs multi-model
+redesign), Media, Scraping, Utilities.
 
 ### Phase 3: Memory System Adaptation
 **Goal:** Preserve learning and memory capabilities

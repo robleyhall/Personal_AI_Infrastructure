@@ -30,7 +30,14 @@ Copilot/
 └── skills/
     ├── Research/           # Ported research workflows
     ├── FirstPrinciples/    # Reasoning from fundamentals
-    └── CreateCLI/          # CLI generation workflows
+    ├── CreateCLI/          # CLI generation workflows
+    ├── Telos/              # Personal mission/goals tracking
+    ├── Thinking/           # BeCreative, Council, FirstPrinciples, IterativeDepth, RedTeam, Science, WorldThreatModelHarness
+    ├── Investigation/      # OSINT, PrivateInvestigator
+    ├── ContentAnalysis/    # ExtractWisdom (YouTube/article analysis)
+    ├── USMetrics/          # US data analysis workflows
+    ├── Security/           # AnnualReports, PromptInjection, Recon, SECUpdates, WebAssessment
+    └── PORTING_NOTES.md    # Batch-port substitution log
 ```
 
 ## What's in the spike
@@ -47,6 +54,7 @@ Copilot/
 | Research skill | ✅ | Mechanical port; see `PORTING_NOTES.md` |
 | FirstPrinciples skill | ✅ | Ported with Copilot-safe runtime paths |
 | CreateCLI skill | ✅ | Ported to `~/.pai/Bin` and shipped in spike |
+| Telos / Thinking / Investigation / ContentAnalysis / USMetrics / Security | ✅ | Batch port; see `skills/PORTING_NOTES.md` |
 | Research memory promotion | ✅ | Saves artifacts + compact `what matters` digest |
 | Rating capture | ✅ | `capture-rating.sh` — explicit ratings → `ratings.jsonl` |
 | Work learning capture | ✅ | `capture-work-learning.sh` — auto-categorised ALGORITHM/SYSTEM |
@@ -55,7 +63,7 @@ Copilot/
 | Session harvester | ⏭️ | Needs transcript format; deferred |
 | Relationship memory | ⏭️ | Complex inference; deferred |
 | Pattern synthesis | ⏭️ | Batch analysis of ratings; deferred |
-| Other skill packs | ⏭️ | Out of scope for spike |
+| **Other skill packs** | ⏭️ | Agents (needs multi-model redesign), Media, Scraping, Utilities — deferred |
 | GitHub Actions | ⏭️ | Deferred |
 | PTY wrapper | ⏭️ | Sidecar first; revisit only if fidelity gaps hurt |
 

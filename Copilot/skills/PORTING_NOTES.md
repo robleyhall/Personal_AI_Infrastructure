@@ -1,0 +1,65 @@
+# Skill Ports — mechanical migration notes
+
+This file documents the batch port of 6 upstream skill packs to the Copilot
+CLI spike: **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**,
+**USMetrics**, **Security**.
+
+Source: `Releases/v4.0.3/.claude/skills/<Name>/`.
+
+## Automated substitutions applied
+
+Applied across all `.md`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.js`, `.json`,
+`.sh` files in each ported tree:
+
+| From (Claude Code) | To (Copilot CLI) |
+|---|---|
+| `~/.claude/`, `$HOME/.claude/` | `~/.pai/`, `$HOME/.pai/` |
+| `.claude/skills/`, `.claude/PAI/` | `.pai/skills/`, `.pai/` |
+| `Read tool` / `Write tool` / `Edit tool` | `view tool` / `create tool` / `edit tool` |
+| `MultiEdit tool` | `edit tool (called multiple times)` |
+| `WebFetch tool` / `WebSearch tool` | `web_fetch tool` / `web_search tool` |
+| `Bash tool` / `Glob tool` / `Grep tool` / `Task tool` | `bash tool` / `glob tool` / `grep tool` / `task tool` |
+| `TodoWrite tool` | `sql tool (todos table)` |
+| `subagent_type: "<Claude custom type>"` | `agent_type: "general-purpose"` (or `"explore"` where appropriate) |
+| `subagent_type:` (generic) | `agent_type:` |
+| `run_in_background: true` | `mode: "background"` |
+
+## What this port *does not* do
+
+1. **Model diversity is lost.** Any workflow that used
+   `GeminiResearcher` / `ClaudeResearcher` / `PerplexityResearcher` /
+   `GrokResearcher` / `CodexResearcher` / `Engineer` / `Architect` /
+   `Designer` / `Artist` / `QATester` agents now runs under the single
+   `general-purpose` agent. Parallelism is preserved; provider diversity
+   is not.
+
+2. **External API tools still reference upstream services.**
+   - `Security/Recon/Tools/BountyPrograms.ts` and similar TS tools were
+     updated for paths but the APIs they call (HackerOne, Bugcrowd, etc.)
+     remain unchanged. They run under `bash` via `bun` exactly as before.
+   - `Scraping/*` skills (not in this batch) still depend on Apify / BrightData
+     API keys.
+
+3. **Voice `voice_id` parameters.** Any lingering ElevenLabs `voice_id`
+   fields in curl payloads are ignored by the spike voice server (which
+   uses macOS `say`). Harmless dead weight.
+
+4. **`USER/SKILLCUSTOMIZATIONS/<Skill>/` overrides.** Referenced as load-time
+   lookups. Directories don't exist yet in the Copilot install; skills fall
+   through to defaults.
+
+5. **Telos Dashboard.** `Telos/DashboardTemplate/` is a Next.js app with an
+   API route that shells out to `~/.pai/PAI/Tools/Inference.ts`. That file
+   doesn't exist in the Copilot runtime — the dashboard's chat feature will
+   fail until `gh models` or an equivalent inference shim is wired up.
+   Static Telos usage (reading/writing MISSION.md, GOALS.md, etc.) works.
+
+## Known friction (capture in `tasks/lessons.md` after first real use)
+
+- Does any workflow reference a model-specific agent role the AI can't
+  compensate for (e.g., a GrokResearcher asked for "raw unfiltered" takes)?
+- Do the big ASCII-box output formats render cleanly in Copilot CLI's TUI?
+- Security skills expect certain tools on `$PATH` (ffuf, amass, etc.).
+  Copilot session will fail fast if missing; that's acceptable for the spike.
+- Investigation/PrivateInvestigator may reference paywalled data sources —
+  document which fall back gracefully vs which produce empty results.

@@ -158,25 +158,39 @@ runtime state and personal memory only.
 
 ## 8. Skill Routing
 
-The installed skills in this spike are **Research**, **FirstPrinciples**, and
-**CreateCLI**.
+The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
+**Telos**, **Thinking**, **Investigation**, **ContentAnalysis**, **USMetrics**,
+**Security**.
 
 | User says | Action |
 |---|---|
 | "research …" / "do research on …" | Read `Copilot/skills/Research/SKILL.md` and follow Standard mode |
 | "quick research …" | Research skill, Quick mode |
 | "extensive research …" / "deep research …" | Research skill, Extensive mode |
-| "deep investigation …" | Research skill, DeepInvestigation workflow |
+| "deep investigation …" (research context) | Research skill, DeepInvestigation workflow |
 | "think from first principles …" / "decompose this …" / "challenge assumptions …" | Read `Copilot/skills/FirstPrinciples/SKILL.md` and use the matching workflow |
 | "create a CLI …" / "build a CLI …" / "add command to this CLI …" | Read `Copilot/skills/CreateCLI/SKILL.md` and route to the matching workflow |
+| "what are my goals/mission/telos …" / "update my goals …" | Read `Copilot/skills/Telos/SKILL.md` and follow its workflow |
+| "be creative …" / "brainstorm …" | Read `Copilot/skills/Thinking/BeCreative/SKILL.md` |
+| "convene a council …" / "debate this …" / "multi-perspective on …" | Read `Copilot/skills/Thinking/Council/SKILL.md` |
+| "red team this …" / "attack this idea …" | Read `Copilot/skills/Thinking/RedTeam/SKILL.md` |
+| "think iteratively …" / "go deeper on …" | Read `Copilot/skills/Thinking/IterativeDepth/SKILL.md` |
+| "apply science …" / "test this hypothesis …" | Read `Copilot/skills/Thinking/Science/SKILL.md` |
+| "world threat model …" | Read `Copilot/skills/Thinking/WorldThreatModelHarness/SKILL.md` |
+| "investigate person/company …" / "OSINT on …" | Read `Copilot/skills/Investigation/SKILL.md` and select OSINT or PrivateInvestigator |
+| "extract wisdom from …" / "analyze this video/article …" | Read `Copilot/skills/ContentAnalysis/SKILL.md` (ExtractWisdom) |
+| "US metrics …" / "analyze US data …" | Read `Copilot/skills/USMetrics/SKILL.md` |
+| "security assessment …" / "recon on …" / "web assessment …" / "prompt injection test …" | Read `Copilot/skills/Security/SKILL.md` and route to the appropriate sub-skill |
 
-In an installed runtime outside this repository, the equivalent paths are:
-
-- `~/.pai/skills/Research/SKILL.md`
-- `~/.pai/skills/FirstPrinciples/SKILL.md`
-- `~/.pai/skills/CreateCLI/SKILL.md`
+In an installed runtime outside this repository, the equivalent paths use
+`~/.pai/skills/<Name>/` instead of `Copilot/skills/<Name>/`.
 
 If the user requests a skill that is not installed, say so plainly.
+
+Skills ported via mechanical substitution may reference tools, APIs, or
+multi-model sub-agents that the spike does not fully support. When a skill
+workflow requests something unavailable, fall back to the closest Copilot
+equivalent (usually `agent_type: "general-purpose"`) and note the limitation.
 
 ---
 

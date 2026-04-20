@@ -116,7 +116,7 @@ A **PRD** (prompt + ISC + notes) is written to `~/.pai/MEMORY/WORK/<timestamp>_<
 
 ## Built-in skills
 
-Three skills ship with the spike. Trigger them with natural language:
+Nine skills ship with the spike. Trigger them with natural language:
 
 ### Research
 Multi-agent research with verified sources.
@@ -147,6 +147,64 @@ Builds personal CLIs to `~/.pai/Bin/`.
 | *"create a CLI for X"* | Scaffolds a new CLI |
 | *"add command Y to this CLI"* | Extends an existing CLI |
 | *"upgrade this CLI to tier 2"* | Adds structure (config, tests, etc.) |
+
+### Telos
+Personal mission, goals, beliefs, and projects tracking.
+
+| Say | What it does |
+|---|---|
+| *"what are my goals?"* | Reads your `USER/TELOS/GOALS.md` |
+| *"update my mission"* | Edits `USER/TELOS/MISSION.md` |
+| *"what am I working on?"* | Lists active projects |
+
+### Thinking
+Seven reasoning frames for different problem types.
+
+| Say | Sub-skill |
+|---|---|
+| *"be creative about X"* / *"brainstorm X"* | BeCreative |
+| *"convene a council on X"* / *"debate X"* | Council (multi-role debate) |
+| *"think iteratively on X"* / *"go deeper on X"* | IterativeDepth |
+| *"red team this"* / *"attack this idea"* | RedTeam |
+| *"apply science to X"* / *"test this hypothesis"* | Science |
+| *"world threat model"* | WorldThreatModelHarness |
+| *"first principles …"* | FirstPrinciples (also exposed as top-level) |
+
+### Investigation
+OSINT and private-investigator workflows for people and companies.
+
+| Say | Sub-skill |
+|---|---|
+| *"investigate <person/company>"* / *"OSINT on X"* | OSINT |
+| *"background check on X"* | PrivateInvestigator |
+
+### ContentAnalysis
+Extract wisdom and structured insights from long-form content.
+
+| Say | What it does |
+|---|---|
+| *"extract wisdom from <URL>"* | Pulls key ideas, quotes, references |
+| *"analyze this video/article"* | YouTube transcript + wisdom extraction |
+
+### USMetrics
+Analyze US data (economic, demographic, public-sector metrics).
+
+### Security
+Multi-tool security workflows.
+
+| Say | Sub-skill |
+|---|---|
+| *"recon on <target>"* | Recon |
+| *"web assessment of <URL>"* | WebAssessment (ffuf, OSINT, testing guides) |
+| *"prompt injection test"* | PromptInjection |
+| *"SEC updates"* / *"annual report for X"* | SECUpdates / AnnualReports |
+
+> **Note:** The 6 newly batch-ported skills (Telos, Thinking, Investigation,
+> ContentAnalysis, USMetrics, Security) are mechanical ports from the upstream
+> Claude Code skill packs. They lose multi-model agent diversity (all agents
+> run under `general-purpose`) and some tools expect system binaries like
+> `ffuf` or `amass` to be on your `$PATH`. See
+> [`skills/PORTING_NOTES.md`](skills/PORTING_NOTES.md) for known gaps.
 
 ---
 
