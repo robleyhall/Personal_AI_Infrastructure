@@ -47,7 +47,7 @@
 
 **Overview:** [Purpose](#the-purpose-of-this-project) · [What is PAI?](#what-is-pai) · [New to AI?](#new-to-this-start-here) · [Principles](#the-pai-principles) · [Primitives](#pai-primitives)
 
-**Get Started:** [Installation](#-installation) · [Releases](Releases/) · [Packs](Packs/)
+**Get Started:** [Installation](#-installation) · [Releases](Releases/) · [Packs](Packs/) · [Copilot Port](#-copilot-cli-port)
 
 **Resources:** [FAQ](#-faq) · [Roadmap](#-roadmap) · [Community](#-community) · [Contributing](#-contributing)
 
@@ -65,6 +65,49 @@
 > **PAI v4.0.3 Released** — 3 patch updates since v4.0.0 with 30+ community-contributed fixes: Linux compatibility, JSON parsing, installer improvements, portability, and upgrade migration.
 >
 > **[Release notes →](Releases/v4.0.3/README.md)** | **[All releases →](Releases/)**
+
+> [!NOTE]
+> **Copilot CLI Port** — This fork includes an experimental port of PAI to GitHub Copilot CLI. The port proves migration feasibility but is not production-ready. See the [Copilot CLI Port](#-copilot-cli-port) section below or [`Copilot/README.md`](Copilot/README.md) for details.
+
+## 🔀 Copilot CLI Port
+
+<details>
+<summary><strong>Experimental spike — proves migration shape, not production-ready</strong></summary>
+
+### Quick Start
+
+```bash
+./Copilot/install.sh
+source ~/.zshrc
+pai
+```
+
+### Architectural Differences
+
+| Area | Claude Code (upstream) | Copilot CLI (this fork) |
+|---|---|---|
+| **Hook system** | 20 hooks across 6 event types | Instruction rules + sidecar wrapper |
+| **Voice** | ElevenLabs TTS | macOS `say` via local HTTP server |
+| **Skills** | 25 capabilities, 49 skills, custom sub-agents | 3 ported skills (Research, FirstPrinciples, CreateCLI) |
+| **Memory tools** | Bun/TS scripts + hooks | Shell scripts (capture-rating, capture-work-learning, learning-readback) |
+| **Install path** | `~/.claude/` | `~/.pai/` |
+| **Installer** | GUI wizard (Bun) | Shell script |
+| **Sub-agents** | Custom types (GeminiResearcher, etc.) | Fixed types (general-purpose, explore, task, rubber-duck, code-review) |
+| **Autonomous loop** | `algorithm.ts` CLI | Deferred |
+| **Packs** | 12 standalone packs | Not yet ported |
+
+### What's Preserved
+
+- ✅ Algorithm 7-phase reasoning loop
+- ✅ Personal context layer (ABOUTME, DAIDENTITY, TELOS)
+- ✅ Memory loop (ratings, learnings, work artifacts)
+- ✅ Rating capture with failure analysis
+- ✅ Voice notifications (macOS `say` backend)
+- ✅ 3 core skills: Research, FirstPrinciples, CreateCLI
+
+**Full details →** [`Copilot/README.md`](Copilot/README.md)
+
+</details>
 
 <div align="center">
 
@@ -446,7 +489,7 @@ PAI is the complete system built on those primitives. It connects everything tog
 
 PAI is Claude Code native. We believe Claude Code's hook system, context management, and agentic capabilities make it the best platform for personal AI infrastructure, and PAI is designed to take full advantage of those features.
 
-That said, PAI's concepts (skills, memory, algorithms) are universal, and the code is TypeScript and Bash — so community members are welcome to adapt it for other platforms.
+That said, PAI's concepts (skills, memory, algorithms) are universal, and the code is TypeScript and Bash — so community members are welcome to adapt it for other platforms. This fork includes an [experimental Copilot CLI port](#-copilot-cli-port) that demonstrates the migration path — preserving the Algorithm, personal context layer, memory loop, and 3 core skills while adapting hook-based behaviors to instruction rules and a sidecar wrapper.
 
 ### How is this different from fabric?
 
