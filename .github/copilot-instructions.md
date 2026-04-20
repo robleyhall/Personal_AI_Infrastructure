@@ -237,18 +237,87 @@ When the user says "save state and shutdown" (or similar):
    echo "<summary of what was learned this session>" | \
      ~/.pai/tools/capture-work-learning.sh --slug "<session-topic>"
    ```
-2. Run `git status`.
-3. Commit any uncommitted work with an appropriate message.
-4. Ensure `tasks/todo.md` reflects current state.
-5. Ensure `tasks/lessons.md` captures new lessons from the session.
-6. Push the current branch to origin.
-7. Report the branch name, commits ahead of main, and remaining open items.
+2. Capture relationship notes if any user-stated durable facts emerged (§ 13).
+3. Update `~/.pai/MEMORY/WORK/active.md` with final status (§ 14).
+4. Run `git status`.
+5. Commit any uncommitted work with an appropriate message.
+6. Ensure `tasks/todo.md` reflects current state.
+7. Ensure `tasks/lessons.md` captures new lessons from the session.
+8. Push the current branch to origin.
+9. Report the branch name, commits ahead of main, and remaining open items.
 
 Do not ask for confirmation between steps.
 
 ---
 
-## 12. Core Principles
+## 12. Security Rules
+
+Copilot CLI has built-in safety. These additional rules replace PAI's
+`SecurityValidator.hook.ts`:
+
+**Never read or print secrets:**
+- `~/.ssh/*`, `~/.aws/*`, `~/.git-credentials`, `~/.config/gh/hosts.yml`
+- Any file whose name contains `secret`, `credential`, `token`, or `key` in
+  a dotfile or config directory
+
+**Read-only unless explicitly asked to modify:**
+- `~/.pai/tools/`, `~/.pai/sidecar/`, `~/.pai/VoiceServer/`, `~/.pai/skills/`
+- These are infrastructure — edit only when the user asks for PAI maintenance
+
+**Never run catastrophic commands:**
+- `rm -rf /`, `rm -rf ~/`, `rm -rf $HOME`
+- Disk format, partition, or wipe commands
+- `chmod -R 777` or `chown -R` outside the working repo
+
+**Require explicit user confirmation:**
+- `git push --force` or `git push --force-with-lease`
+- Bulk deletes (>10 files or recursive)
+- Recursive chmod/chown outside the repo root
+
+---
+
+## 13. Relationship Memory (best-effort)
+
+At **explicit shutdown** ("save state and shutdown") and at the **end of
+ALGORITHM mode** (Phase 7), check whether the session surfaced any
+**user-stated durable facts**: biographical details, stated preferences,
+opinions the user expressed directly, or corrections to prior assumptions.
+
+If yes, append brief bullets to:
+```
+~/.pai/MEMORY/RELATIONSHIP/$(date -u +%Y-%m-%d).md
+```
+
+Rules:
+- Only capture facts the user **explicitly stated** — never infer.
+- Keep entries to 1–3 bullets per session.
+- If nothing durable was stated, skip silently.
+- This is best-effort — missing an entry is acceptable.
+
+---
+
+## 14. Active Work Tracking
+
+Keep `~/.pai/MEMORY/WORK/active.md` as a **single overwritten block** (not
+appended) reflecting current work status:
+
+- **On ALGORITHM start** (Phase 1): write the task description and ISC summary.
+- **On shutdown**: update with final status (done, blocked, or in-progress).
+
+Format:
+```markdown
+## Current Work
+- **Task:** <≤12 word description>
+- **Status:** in-progress | done | blocked
+- **ISC:** <N>/<M> criteria passing
+- **Updated:** <ISO timestamp>
+```
+
+This ensures startup readback (`§ 1`) always reflects the latest state.
+
+---
+
+## 15. Core Principles
 
 - **Simplicity first.** Keep changes and instructions minimal and direct.
 - **Match existing patterns.** Consistency beats personal preference.

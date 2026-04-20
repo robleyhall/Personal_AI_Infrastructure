@@ -836,42 +836,10 @@ additive — existing Claude Code content stays intact.
 
 ### Tasks
 
-- [ ] **1. Add Copilot port banner** (`readme-banner`)
-  Insert a `> [!NOTE]` callout immediately after the v4.0.3 `> [!IMPORTANT]` block
-  (after line 67). Text: this fork includes an experimental Copilot CLI port, links
-  to the new section below, sets expectations (spike, not production).
-
-- [ ] **2. Add "🔀 Copilot CLI Port" section** (`readme-copilot-section`)
-  *Depends on: readme-banner*
-  Insert a new `## 🔀 Copilot CLI Port` section after the banner, before the
-  "AI should magnify everyone" heading. Contents:
-  - **Status**: Experimental spike — proves migration shape, not production-ready
-  - **Quick start**: 3-line install (`./Copilot/install.sh`, source, `pai`)
-  - **Architectural differences table**:
-    | Area | Claude Code (upstream) | Copilot CLI (this fork) |
-    |---|---|---|
-    | Hook system | 20 hooks across 6 event types | Instruction rules + sidecar wrapper |
-    | Voice | ElevenLabs TTS | macOS `say` via local HTTP server |
-    | Skills | 25 capabilities, 49 skills, custom sub-agents | 3 ported skills (Research, FirstPrinciples, CreateCLI), generic agent types |
-    | Memory tools | Bun/TS scripts + hooks | Shell scripts (capture-rating, capture-work-learning, learning-readback, save-research-memory) |
-    | Install path | `~/.claude/` | `~/.pai/` |
-    | Installer | GUI wizard (Bun) | Shell script |
-    | Sub-agents | Custom types (GeminiResearcher, etc.) | Fixed types (general-purpose, explore, task, rubber-duck, code-review) |
-    | Autonomous loop | `algorithm.ts` CLI | Deferred |
-    | Packs | 12 standalone packs | Not yet ported |
-  - **What's preserved**: Algorithm 7-phase loop, personal context layer, memory
-    loop, rating capture, voice notifications, 3 core skills
-  - **Link**: See `Copilot/README.md` for full spike details
-
-- [ ] **3. Update nav links** (`readme-nav-update`)
-  *Depends on: readme-copilot-section*
-  Add a "Copilot Port" entry to the top navigation line (around line 48–52) so
-  readers can jump directly to the new section.
-
-- [ ] **4. Update FAQ entry** (`readme-faq-update`)
-  Update the "Is PAI only for Claude Code?" FAQ answer (around line 445) to cite
-  the Copilot CLI port as a concrete example of platform adaptation, rather than
-  just saying "community members are welcome to adapt it."
+- [x] **1. Add Copilot port banner** (`readme-banner`)
+- [x] **2. Add "🔀 Copilot CLI Port" section** (`readme-copilot-section`)
+- [x] **3. Update nav links** (`readme-nav-update`)
+- [x] **4. Update FAQ entry** (`readme-faq-update`)
 
 ### Notes
 
