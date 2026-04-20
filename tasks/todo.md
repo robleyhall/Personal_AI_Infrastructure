@@ -728,16 +728,20 @@ copies those docs into `~/.pai/` while exporting `PAI_DIR` and
 - Document skills that require Claude Code-specific features and can't be ported
 
 **Status (2026-04-20):** Expanded. The installed Copilot skill set now includes
-11 skills: `Research`, `FirstPrinciples`, `CreateCLI`, `Telos`, `Thinking`,
+14 skills: `Research`, `FirstPrinciples`, `CreateCLI`, `Telos`, `Thinking`,
 `Investigation`, `ContentAnalysis`, `USMetrics`, `Security`, **`Parser`**,
-**`Documents` (PDF only)**. Parser and Documents/Pdf are T1 additions from
-the 30-day eval plan. All ports are mechanical batch substitutions — see
-`Copilot/skills/PORTING_NOTES.md` for the substitution log and known gaps.
-Model diversity across sub-agents is lost (all run under `general-purpose`).
-Deferred: Agents (needs multi-model redesign), Media (Art/Remotion),
-Scraping, remaining Utilities sub-skills (CreateSkill, Delegation, Evals,
-Fabric, PAIUpgrade, Prompting, Aphorisms, Cloudflare, Browser, AudioEditor),
-Documents/Docx/Xlsx/Pptx.
+**`Documents` (PDF only)**, **`CreateSkill`**, **`Media` (Mermaid only)**,
+**`Delegation` (degraded)**. Parser and Documents/Pdf are T1 eval additions;
+CreateSkill, Media, and Delegation are T2. All ports are mechanical batch
+substitutions — see `Copilot/skills/PORTING_NOTES.md` for the substitution
+log and known gaps. Model diversity across sub-agents is lost (all run under
+`general-purpose`). Delegation carries a degraded-form banner: Claude-Code-
+only `TeamCreate`/`TaskCreate`/`SendMessage` are **not available** in Copilot
+and fall back to parallel `task` calls coordinated via files or SQL.
+Deferred: Agents (needs multi-model redesign), Media/Remotion,
+Media/Art image-gen workflows (API-gated), Scraping, remaining Utilities
+sub-skills (Evals, Fabric, PAIUpgrade, Prompting, Aphorisms, Cloudflare,
+Browser, AudioEditor), Documents/Docx/Xlsx/Pptx.
 
 ### Phase 3: Memory System Adaptation
 **Goal:** Preserve learning and memory capabilities

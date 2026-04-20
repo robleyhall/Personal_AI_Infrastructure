@@ -170,7 +170,7 @@ runtime state and personal memory only.
 
 The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**, **USMetrics**,
-**Security**, **Parser**, **Documents**.
+**Security**, **Parser**, **Documents**, **CreateSkill**, **Media** (Mermaid only), **Delegation** (degraded).
 
 | User says | Action |
 |---|---|
@@ -193,6 +193,9 @@ The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 | "security assessment …" / "recon on …" / "web assessment …" / "prompt injection test …" | Read `Copilot/skills/Security/SKILL.md` and route to the appropriate sub-skill |
 | "parse …" / "extract …" / "extract article/YouTube/PDF/newsletter/Twitter …" / "detect content type …" | Read `Copilot/skills/Parser/SKILL.md` and follow the matching workflow |
 | "read this PDF …" / "summarize this PDF …" / "extract text from PDF …" | Read `Copilot/skills/Documents/Pdf/SKILL.md` |
+| "create a skill …" / "new skill …" / "scaffold skill …" / "validate skill …" / "update skill …" / "canonicalize skill …" | Read `Copilot/skills/CreateSkill/SKILL.md` |
+| "mermaid …" / "flowchart …" / "technical diagram …" (code-renderable) | Read `Copilot/skills/Media/SKILL.md` (only the Mermaid workflow is verified; image-gen workflows are API-gated) |
+| "delegate …" / "parallel execution …" / "agent team …" / "swarm …" / "3+ workstreams …" | Read `Copilot/skills/Delegation/SKILL.md` — note the Copilot Spike Status at the top; teams/swarms fall back to parallel `task` calls |
 
 In an installed runtime outside this repository, the equivalent paths use
 `~/.pai/skills/<Name>/` instead of `Copilot/skills/<Name>/`.

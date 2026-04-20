@@ -64,6 +64,40 @@ Applied across all `.md`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.js`, `.json`,
 - Investigation/PrivateInvestigator may reference paywalled data sources —
   document which fall back gracefully vs which produce empty results.
 
+## Tier-2 30-day eval additions (2026-04-20)
+
+### CreateSkill (`Copilot/skills/CreateSkill/`)
+- Mechanical port of `Releases/v4.0.3/.claude/skills/Utilities/CreateSkill/`
+  (5 files). Enables the "grow in parallel" strategy — user can scaffold
+  and validate new Copilot skills without hand-porting.
+
+### Media + Media/Art (`Copilot/skills/Media/`)
+- Ported the full `Media/Art/` tree but scoped routing to **Mermaid only**.
+- Parent `Copilot/skills/Media/SKILL.md` carries a prominent Copilot Spike
+  Status banner explaining that image-gen workflows (Midjourney, OpenAI,
+  `ComposeThumbnail.ts`) require API keys and Remotion is not ported.
+- All 13 Workflows are preserved for reference; only `Workflows/Mermaid.md`
+  is advertised as executable in the routing table.
+- TS tools (`Generate.ts`, `GenerateMidjourneyImage.ts`, `ComposeThumbnail.ts`,
+  `GeneratePrompt.ts`) remain in place — they will fail fast without the
+  required environment, which is acceptable for the spike.
+
+### Delegation (`Copilot/skills/Delegation/`)
+- Ported with an explicit **degraded-form** Copilot Spike Status banner at
+  the top of `SKILL.md`. The banner maps Claude-Code-only constructs onto
+  Copilot equivalents:
+  - Specialized agent types (Engineer, Architect, Algorithm, …) →
+    `task` with `agent_type: "general-purpose"` + prompt flavoring
+  - `model="haiku"/"sonnet"/"opus"` → ignored
+  - `TeamCreate` / `TaskCreate` / `SendMessage` → **not available**; fall
+    back to parallel `task` calls coordinated via shared files or the SQL
+    `todos` table
+  - `run_in_background: true` → `mode: "background"`
+- The rest of the SKILL.md is preserved as reference material. AIs reading
+  it must apply the mapping table, not follow the prose literally.
+- Second substitution pass was needed for Delegation: the initial regex
+  only matched `subagent_type:` (colon form); function-call form
+  `subagent_type="..."` was rewritten in a dedicated pass.
 ## Tier-1 30-day eval additions (2026-04-20)
 
 Three additions from the 30-day eval plan (session folder `plan.md`):
