@@ -1,0 +1,56 @@
+# Fabric pattern subset — Corporate Bundle
+#
+# One pattern name per line. install-corporate.sh copies only these
+# subdirectories from skills/Fabric/Patterns/.
+#
+# Selection criteria:
+#   - Generic prompt patterns (not branded, not personality-specific)
+#   - Broadly useful across technical work
+#   - No hardcoded author voice or third-party brand references
+#
+# ~30 patterns selected out of 237 upstream.
+
+# -- Summarization --
+summarize
+create_micro_summary
+create_5_sentence_summary
+create_summary
+
+# -- Insight extraction --
+extract_wisdom
+extract_insights
+extract_main_idea
+extract_ideas
+extract_recommendations
+extract_patterns
+
+# -- Analysis --
+analyze_claims
+review_code
+analyze_prose
+analyze_logs
+analyze_threat_report
+
+# -- Threat modeling --
+create_threat_model
+create_stride_threat_model
+create_security_update
+
+# -- Writing improvement --
+improve_writing
+improve_prompt
+
+# -- Evaluation --
+rate_content
+judge_output
+
+# -- Generation --
+create_prd
+create_mermaid_visualization
+create_tags
+create_coding_feature
+
+# -- Utility --
+write_essay
+explain_code
+explain_project

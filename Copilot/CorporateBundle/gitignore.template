@@ -1,0 +1,23 @@
+# .gitignore snippet — Corporate PAI
+
+# Use this in any corp repo you work in, to prevent accidental commits of
+# PAI memory, learning files, or user-authored content.
+
+# If you ever link ~/.pai/ into a repo (unusual), these patterns prevent
+# accidentally staging personal/corporate memory.
+.pai/
+**/.pai/
+**/MEMORY/LEARNING/
+**/MEMORY/WORK/
+**/MEMORY/RELATIONSHIP/
+**/ratings.jsonl
+**/startup-digest.md
+
+# User-authored PAI identity files (never commit)
+**/USER/ABOUTME.md
+**/USER/DAIDENTITY.md
+**/USER/AISTEERINGRULES.md
+**/USER/TELOS/
+
+# Sidecar logs
+**/pai/logs/

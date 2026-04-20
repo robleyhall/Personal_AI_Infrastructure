@@ -1,0 +1,49 @@
+# INCLUDES — Corporate Bundle Allowlist
+#
+# Lines starting with # are comments. Empty lines ignored.
+# One entry per line. Paths are relative to Copilot/ in the source tree.
+# install-corporate.sh reads this file and only copies these artifacts.
+#
+# Three categories:
+#   - tools/      (bash scripts)
+#   - skills/     (markdown workflows + scaffolds)
+#   - sidecar/    (pai-copilot-corp)
+#
+# Anything not in this file does not ship.
+
+# -- Tools (bash, local-only, no network) ---------------------------------
+tools/capture-rating.sh
+tools/capture-work-learning.sh
+tools/harvest-session.sh
+tools/learning-readback.sh
+tools/save-research-memory.sh
+
+# -- Sidecar (slim corporate variant) -------------------------------------
+sidecar/pai-copilot-corp
+
+# -- Green skills (ship as-is after path fixes) ---------------------------
+skills/FirstPrinciples/
+skills/Thinking/
+skills/ContentAnalysis/
+skills/Documents/Pdf/
+# Telos ships from CorporateBundle/skills/Telos/ (CSA-framed templates),
+# not from skills/Telos/ — see install-corporate.sh handling.
+CorporateBundle/skills/Telos/
+
+# -- Yellow skills (ship with modifications) ------------------------------
+skills/Fabric/SKILL.md
+skills/Fabric/Workflows/
+# Fabric patterns: only the curated subset. See FABRIC_PATTERNS.txt.
+# install-corporate.sh reads FABRIC_PATTERNS.txt to decide which Patterns/ subdirs to copy.
+
+skills/Research/
+skills/Prompting/SKILL.md
+skills/Prompting/Standards.md
+skills/Prompting/Templates/
+# Prompting/Tools/ is excluded (TypeScript; deferred to Tier 4).
+# Prompting/Workflows/ doesn't exist upstream (known gap).
+
+skills/CreateSkill/
+
+# -- Reference docs -------------------------------------------------------
+skills/PORTING_NOTES.md
