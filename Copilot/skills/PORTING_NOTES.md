@@ -63,3 +63,38 @@ Applied across all `.md`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.js`, `.json`,
   Copilot session will fail fast if missing; that's acceptable for the spike.
 - Investigation/PrivateInvestigator may reference paywalled data sources —
   document which fall back gracefully vs which produce empty results.
+
+## Tier-1 30-day eval additions (2026-04-20)
+
+Three additions from the 30-day eval plan (session folder `plan.md`):
+
+### Parser (`Copilot/skills/Parser/`)
+- Mechanical port of `Releases/v4.0.3/.claude/skills/Utilities/Parser/`.
+- All 30 files substituted with the standard table above.
+- Known issue (upstream, pre-existing): `Lib/parser.ts` imports
+  `../schema/schema.ts` but the dir is `Schema/` — would fail on
+  case-sensitive filesystems. Not fixed by this port; flag if encountered.
+- Dep: `uuid` (bun-installable).
+
+### Documents/Pdf (`Copilot/skills/Documents/Pdf/`)
+- Only the **PDF sub-skill** is ported. Parent `SKILL.md` now carries a
+  "Copilot Spike Status" note and routes DOCX/XLSX/PPTX to "Not ported".
+- `Workflows/ConsultingReport.md` and `Workflows/ProcessLargePdfGemini3.md`
+  are ported alongside PDF (they are PDF-adjacent).
+- Python scripts depend on `pypdf`, `pdf2image`, `Pillow` — user must
+  `pip install` them on first use.
+
+### harvest-session.sh (`Copilot/tools/harvest-session.sh`)
+- Replaces the upstream `SessionHarvester.ts` (which parsed Claude
+  `projects/` transcripts). This version reads
+  `~/.copilot/session-state/*/events.jsonl` directly.
+- Extracts `session.task_complete` events (they already contain
+  self-generated markdown summaries) and pipes each session's summary
+  through `capture-work-learning.sh`.
+- Idempotent via a `.harvested` sentinel per session directory.
+- First smoke run on this host captured 18 historic sessions into
+  `MEMORY/LEARNING/SYSTEM/2026-04/`.
+- Limitation: auto-categorisation skews SYSTEM because the infra keyword
+  list hits most engineering summaries. User may manually move ALGORITHM
+  items if the imbalance becomes a problem.
+

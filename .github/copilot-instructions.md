@@ -114,6 +114,16 @@ Capture learnings at these concrete moments:
 The script auto-categorises content as ALGORITHM (task execution) or SYSTEM
 (tooling/infra) based on keywords. Override with `--category system` if needed.
 
+**Backfill past sessions:** `~/.pai/tools/harvest-session.sh` scans
+`~/.copilot/session-state/*/events.jsonl` for `session.task_complete`
+summaries and either prints a digest (default, dry-run) or pipes each through
+`capture-work-learning.sh` (with `--auto`). Sessions are marked idempotent
+via a `.harvested` sentinel, so it's safe to re-run. Typical use:
+
+```bash
+~/.pai/tools/harvest-session.sh --auto --days 7
+```
+
 ---
 
 ## 6. ALGORITHM Mode
@@ -160,7 +170,7 @@ runtime state and personal memory only.
 
 The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**, **USMetrics**,
-**Security**.
+**Security**, **Parser**, **Documents**.
 
 | User says | Action |
 |---|---|
@@ -181,6 +191,8 @@ The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
 | "extract wisdom from …" / "analyze this video/article …" | Read `Copilot/skills/ContentAnalysis/SKILL.md` (ExtractWisdom) |
 | "US metrics …" / "analyze US data …" | Read `Copilot/skills/USMetrics/SKILL.md` |
 | "security assessment …" / "recon on …" / "web assessment …" / "prompt injection test …" | Read `Copilot/skills/Security/SKILL.md` and route to the appropriate sub-skill |
+| "parse …" / "extract …" / "extract article/YouTube/PDF/newsletter/Twitter …" / "detect content type …" | Read `Copilot/skills/Parser/SKILL.md` and follow the matching workflow |
+| "read this PDF …" / "summarize this PDF …" / "extract text from PDF …" | Read `Copilot/skills/Documents/Pdf/SKILL.md` |
 
 In an installed runtime outside this repository, the equivalent paths use
 `~/.pai/skills/<Name>/` instead of `Copilot/skills/<Name>/`.

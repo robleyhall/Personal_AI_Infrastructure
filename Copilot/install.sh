@@ -62,7 +62,8 @@ install_tree() {
     "$PAI_DIR/tools/save-research-memory.sh" \
     "$PAI_DIR/tools/capture-rating.sh" \
     "$PAI_DIR/tools/capture-work-learning.sh" \
-    "$PAI_DIR/tools/learning-readback.sh"
+    "$PAI_DIR/tools/learning-readback.sh" \
+    "$PAI_DIR/tools/harvest-session.sh"
 }
 
 install_alias() {
