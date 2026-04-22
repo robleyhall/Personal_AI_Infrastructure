@@ -6,7 +6,7 @@ description: Read, write, convert, and analyze documents — routes to PDF, DOCX
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Documents/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/Documents/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

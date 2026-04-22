@@ -28,7 +28,7 @@ Copilot CLI. The point is to exercise the end-to-end flow, not to re-architect.
    `voice_id` fields. The spike voice server (`Copilot/VoiceServer`) ignores
    them, so nothing breaks — but they're dead weight.
 
-3. **`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Research/`.** Referenced as a
+3. **`~/.pai/USER/SKILLCUSTOMIZATIONS/Research/`.** Referenced as a
    load-time lookup. Directory does not exist yet in the Copilot install.
    Skill gracefully falls through to defaults if it's missing.
 

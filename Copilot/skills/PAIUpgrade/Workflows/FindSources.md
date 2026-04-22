@@ -158,7 +158,7 @@ For each potential source, score:
 ## How to Add Sources
 
 ### For YouTube Channels:
-Edit `~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/youtube-channels.json`
+Edit `~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/youtube-channels.json`
 
 ### For Other Sources:
 Currently, non-YouTube sources are monitored via the base `sources.json`.
@@ -173,7 +173,7 @@ If user approves recommendations:
 
 ```bash
 # Read current user config
-cat ~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/youtube-channels.json
+cat ~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/youtube-channels.json
 
 # Add new channels (merge with existing)
 # Update the channels array with new entries

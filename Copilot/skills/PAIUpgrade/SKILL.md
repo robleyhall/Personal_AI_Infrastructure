@@ -6,7 +6,7 @@ description: Extract system improvements from content AND monitor external sourc
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -329,11 +329,11 @@ Using BACKGROUNDDELEGATION, spawn both analysis threads simultaneously:
 
 ### Agent 1: TELOS Analysis
 Read and analyze:
-- ~/.pai/PAI/USER/TELOS/TELOS.md
-- ~/.pai/PAI/USER/TELOS/GOALS.md
-- ~/.pai/PAI/USER/TELOS/PROJECTS.md
-- ~/.pai/PAI/USER/TELOS/CHALLENGES.md
-- ~/.pai/PAI/USER/TELOS/STATUS.md
+- ~/.pai/USER/TELOS/TELOS.md
+- ~/.pai/USER/TELOS/GOALS.md
+- ~/.pai/USER/TELOS/PROJECTS.md
+- ~/.pai/USER/TELOS/CHALLENGES.md
+- ~/.pai/USER/TELOS/STATUS.md
 
 Extract: Current focus, priorities, active goals, project themes
 
@@ -407,7 +407,7 @@ Generate the prioritized recommendations report (see format above).
 - `State/youtube-videos.json` - YouTube state
 - `State/github-trending.json` - GitHub trending state (seen repos)
 
-**User Customizations** (`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/`):
+**User Customizations** (`~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/`):
 - `EXTEND.yaml` - Extension manifest
 - `youtube-channels.json` - User's personal YouTube channels
 - Additional source definitions

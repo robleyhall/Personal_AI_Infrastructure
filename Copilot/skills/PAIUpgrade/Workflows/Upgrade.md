@@ -41,11 +41,11 @@ Use task tool with agent_type=general-purpose, run 4 agents in parallel:
 
 Agent 1 - TELOS Analysis:
 "Read and analyze the user's TELOS files to understand their current focus:
-- ~/.pai/PAI/USER/TELOS/TELOS.md
-- ~/.pai/PAI/USER/TELOS/GOALS.md
-- ~/.pai/PAI/USER/TELOS/PROJECTS.md
-- ~/.pai/PAI/USER/TELOS/CHALLENGES.md
-- ~/.pai/PAI/USER/TELOS/STATUS.md
+- ~/.pai/USER/TELOS/TELOS.md
+- ~/.pai/USER/TELOS/GOALS.md
+- ~/.pai/USER/TELOS/PROJECTS.md
+- ~/.pai/USER/TELOS/CHALLENGES.md
+- ~/.pai/USER/TELOS/STATUS.md
 
 Extract and return:
 1. Current high-priority goals
@@ -177,7 +177,7 @@ If a video has no extractable techniques, mark it as 'skipped: no techniques fou
 Agent 3 - Custom Sources:
 "Check for any custom sources defined by the user:
 
-1. Look in ~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/
+1. Look in ~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/
 2. Check for additional source definitions beyond YouTube and GitHub trending
 3. If sources exist, check them for updates
 
@@ -188,7 +188,7 @@ Agent 4 - GitHub Trending Projects:
 "Discover trending GitHub projects relevant to PAI for inspiration.
 
 1. Load the github_trending config from user-sources.json:
-   Read ~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/user-sources.json
+   Read ~/.pai/USER/SKILLCUSTOMIZATIONS/PAIUpgrade/user-sources.json
    Parse the 'github_trending' section.
 
 2. If github_trending.enabled is false or missing, return:

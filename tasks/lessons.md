@@ -158,3 +158,13 @@
 **Fix:** The sidecar now unconditionally passes `--add-dir "$PAI_DIR"` to `copilot`. The repo copy (`Copilot/sidecar/pai-copilot`) was updated to match, and `Copilot/README.md` and `Copilot/ContextRouting.md` document why the flag is load-bearing.
 
 **Rule:** For any PAI session-start behavior that depends on reading files outside the cwd (user identity, steering rules, relationship memory, active work, startup digest), the sidecar must add those paths to Copilot's file-access allowlist at process start via `--add-dir`. Do not rely solely on instruction-file rules or pre-session file materialisation — both still require the AI to *read* the file mid-session, and reads outside the allowlist fail quietly. When adding a new PAI directory that the AI must read in-session, either place it under `$PAI_DIR` (already allowlisted) or extend the sidecar's `--add-dir` arguments.
+
+## Session: 2026-04-22 — Lesson 11 cleanup (resolved)
+
+### Lesson: Full `~/.pai/PAI/USER/` cleanup completed
+
+**What happened:** The path bug from Lesson 11 was still live across ~65 files (32 repo source + 33 installed tree) and had misplaced the entire TELOS directory. Robley spotted both `~/.pai/USER/` and `~/.pai/PAI/USER/` coexisting during a Tier 2 TELOS session.
+
+**Fix:** Moved `~/.pai/PAI/USER/TELOS` → `~/.pai/USER/TELOS`, removed empty `~/.pai/PAI/`, and ran a plain-string sed replacing `~/.pai/PAI/USER/` with `~/.pai/USER/` across every non-memory file in both the repo (`Copilot/skills/`) and the installed tree (`~/.pai/skills/` + `~/.pai/USER/ABOUTME.md`). Memory files (MEMORY/LEARNING, RELATIONSHIP, WORK/GAPS) intentionally left alone — they record the bug as history.
+
+**Rule:** Lesson 11 is closed for the `PAI/USER/` collapse. Remaining lesson-11-adjacent issues — phantom root-level paths like `~/.pai/PAI/SKILL.md`, `~/.pai/PAI/Tools/...`, `~/.pai/PAI/Prompting.md` — are a *different* bug and tracked in `~/.pai/MEMORY/WORK/active.md` under "Phantom-PAI-root cleanup."

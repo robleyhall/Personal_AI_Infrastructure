@@ -10,7 +10,7 @@ Complete visual content system for creating illustrations, diagrams, and visual 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Art/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/Art/`
 
 If this directory exists, load and apply:
 - `PREFERENCES.md` - Aesthetic preferences, default model, output location
@@ -89,7 +89,7 @@ Route to the appropriate workflow based on the request.
 - Character design specifications
 - Scene composition rules
 
-**Load from:** `~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Art/PREFERENCES.md`
+**Load from:** `~/.pai/USER/SKILLCUSTOMIZATIONS/Art/PREFERENCES.md`
 
 ---
 
@@ -97,7 +97,7 @@ Route to the appropriate workflow based on the request.
 
 **User customization** may include reference images for consistent style.
 
-Check `~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Art/PREFERENCES.md` for:
+Check `~/.pai/USER/SKILLCUSTOMIZATIONS/Art/PREFERENCES.md` for:
 - Reference image locations
 - Style examples by use case
 - Character and scene reference guidance

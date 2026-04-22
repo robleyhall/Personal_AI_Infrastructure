@@ -6,7 +6,7 @@ description: 240+ specialized prompt patterns for content analysis, extraction, 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Fabric/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/Fabric/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

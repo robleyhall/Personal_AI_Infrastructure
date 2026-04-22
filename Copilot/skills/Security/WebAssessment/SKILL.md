@@ -6,7 +6,7 @@ description: Full web app security assessment — app understanding, threat mode
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/WebAssessment/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/WebAssessment/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

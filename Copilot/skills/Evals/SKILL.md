@@ -6,7 +6,7 @@ description: Objective eval metrics via code/model/human graders with pass@k/pas
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Evals/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/Evals/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

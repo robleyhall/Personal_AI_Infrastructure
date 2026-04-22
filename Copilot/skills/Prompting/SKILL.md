@@ -6,7 +6,7 @@ description: Meta-prompting system that generates optimized prompts using templa
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/Prompting/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/Prompting/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

@@ -6,7 +6,7 @@ description: Aggregate and analyze annual security reports from major vendors â€
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/AnnualReports/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/AnnualReports/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

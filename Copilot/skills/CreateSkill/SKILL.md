@@ -6,7 +6,7 @@ description: Scaffold new PAI skills with proper YAML front matter, TitleCase na
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.pai/PAI/USER/SKILLCUSTOMIZATIONS/CreateSkill/`
+`~/.pai/USER/SKILLCUSTOMIZATIONS/CreateSkill/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
