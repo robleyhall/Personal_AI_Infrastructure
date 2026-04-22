@@ -99,7 +99,9 @@ main() {
 
   # Forward all args + signals to copilot. We intentionally do NOT wrap stdin/stdout
   # in a PTY — Copilot CLI manages its own TUI and we want zero interference.
-  copilot "$@"
+  # Always allow file access to $PAI_DIR so PAI memory/tools/skills are reachable
+  # without per-session /add-dir prompts.
+  copilot --add-dir "$PAI_DIR" "$@"
   local code=$?
 
   post_session "$code"

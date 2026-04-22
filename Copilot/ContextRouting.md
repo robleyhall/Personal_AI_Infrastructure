@@ -31,6 +31,13 @@ state and personal memory.
 
 ## Installed runtime and user context
 
+These paths are reliably readable in any `pai` session because the sidecar
+launches Copilot with `--add-dir "$PAI_DIR"`, which adds the entire `~/.pai`
+tree to Copilot's file-access allowlist at process start. Without that flag,
+reading anything under `~/.pai` outside the cwd would require per-session
+`/add-dir` approval. See `Copilot/sidecar/pai-copilot` and
+`Copilot/README.md` → "Sidecar file-access allowlist".
+
 | Topic | Path |
 |---|---|
 | User profile | `~/.pai/USER/ABOUTME.md` |

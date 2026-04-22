@@ -49,7 +49,7 @@ Copilot/
 | `copilot-instructions.md` | ✅ | Modes, routing, Algorithm, voice, ratings, memory |
 | `ContextRouting.md` | ✅ | Repo-local + installed-runtime path map |
 | `Algorithm.md` | ✅ | Copilot-adapted ISC and 7-phase reference |
-| Sidecar wrapper | ✅ | Pre-session digest materialisation + voice startup |
+| Sidecar wrapper | ✅ | Pre-session digest materialisation + voice startup + `--add-dir $PAI_DIR` for context access |
 | Voice server (`say`) | ✅ | Drop-in `POST /notify`, no API key |
 | Research skill | ✅ | Mechanical port; see `PORTING_NOTES.md` |
 | FirstPrinciples skill | ✅ | Ported with Copilot-safe runtime paths |
@@ -78,6 +78,23 @@ pai                   # launches copilot via the sidecar
 The installer now also copies `Algorithm.md` and `ContextRouting.md` into
 `~/.pai/`, creates `~/.pai/Bin/` for generated personal CLIs, and adds
 `PAI_DIR` plus `PAI_VOICE_URL` exports to the shell profile.
+
+### Sidecar file-access allowlist
+
+The sidecar launches Copilot as:
+
+```bash
+copilot --add-dir "$PAI_DIR" "$@"
+```
+
+This is architecturally load-bearing: Copilot's default file-access scope is
+the current working directory, so without `--add-dir $PAI_DIR` the AI cannot
+read `~/.pai/USER/`, `~/.pai/MEMORY/`, `~/.pai/skills/`, or `~/.pai/tools/`
+without per-session `/add-dir` prompts. Pre-session materialisation of
+`startup-digest.md` is not enough on its own — the in-session instruction
+file also needs to read `ABOUTME.md`, `DAIDENTITY.md`, `AISTEERINGRULES.md`,
+`latest.md`, and `active.md` for every prompt. `--add-dir` closes that gap
+and makes the full startup readback reliable.
 
 ## Verify
 

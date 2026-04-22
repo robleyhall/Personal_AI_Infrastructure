@@ -138,3 +138,23 @@
 **Fix:** Add `package.json` to the skill source, and teach `Copilot/install.sh` to run `bun install` inside any `~/.pai/skills/*/` that has a `package.json` (Telos already has two — the pattern exists but isn't automated).
 
 **Rule:** Any TypeScript tool in a skill that imports third-party packages must ship with a `package.json` alongside it, and the installer must run `bun install` in every skill dir that has one. Document this in `Copilot/skills/PORTING_NOTES.md` as a port acceptance criterion.
+
+---
+
+## Session: 2026-04-22 — PAI startup indicator
+
+### Lesson: Don't default the PAI status line — actually check the env var
+
+**What happened:** On first turn of a PAI session, emitted `⚪ PAI inactive` even though `PAI_SESSION_ID`, `PAI_DIR`, and `PAI_VOICE_URL` were all set in the environment. User caught it from the screenshot. The instruction in `~/.copilot/copilot-instructions.md` § "PAI startup indicator" is explicit about checking `PAI_SESSION_ID`; the model skipped the check and defaulted to inactive.
+
+**Fix:** On the first response of any session, verify `PAI_SESSION_ID` with a real tool call (`echo "$PAI_SESSION_ID"` via bash, or equivalent) *before* emitting the status line. Do not rely on the `<environment_context>` block or memory — neither surfaces `PAI_SESSION_ID`.
+
+**Rule:** The PAI startup indicator is a verification step, not a vibe check. First turn of every session: run `bash: echo "PAI_SESSION_ID=[${PAI_SESSION_ID}]"` (or fold it into another needed first-turn command), then emit `🧠 PAI active · session <id>` if non-empty, else `⚪ PAI inactive`. Never emit the line before the check.
+
+### Lesson: Instruction-based context loading is insufficient when files live outside cwd
+
+**What happened:** The PAI startup readback routinely came back partial in earlier sessions — `ABOUTME.md`, `DAIDENTITY.md`, `AISTEERINGRULES.md`, `latest.md`, and `active.md` were empty or unreadable even though the sidecar had materialised `startup-digest.md` pre-session. Cause: Copilot CLI's default file-access scope is the cwd (and the session workspace). Anything under `~/.pai/` requires explicit allowlisting, or the AI either silently returns empty content or triggers per-session `/add-dir` prompts. Instruction rules alone ("read these files at startup") could not bridge that gap. Today's session confirmed the fix: launching Copilot as `copilot --add-dir "$PAI_DIR" "$@"` inside `~/.pai/sidecar/pai-copilot` made the full readback work end-to-end for the first time.
+
+**Fix:** The sidecar now unconditionally passes `--add-dir "$PAI_DIR"` to `copilot`. The repo copy (`Copilot/sidecar/pai-copilot`) was updated to match, and `Copilot/README.md` and `Copilot/ContextRouting.md` document why the flag is load-bearing.
+
+**Rule:** For any PAI session-start behavior that depends on reading files outside the cwd (user identity, steering rules, relationship memory, active work, startup digest), the sidecar must add those paths to Copilot's file-access allowlist at process start via `--add-dir`. Do not rely solely on instruction-file rules or pre-session file materialisation — both still require the AI to *read* the file mid-session, and reads outside the allowlist fail quietly. When adding a new PAI directory that the AI must read in-session, either place it under `$PAI_DIR` (already allowlisted) or extend the sidecar's `--add-dir` arguments.
