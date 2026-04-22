@@ -218,14 +218,14 @@ equivalent (usually `agent_type: "general-purpose"`) and note the limitation.
 
 Usage limits matter. After any completed research workflow:
 
-1. Save the full artifact under `~/.pai/MEMORY/RESEARCH/...`.
-2. Promote only a compact "what matters" digest into startup-loaded memory.
-3. Keep the promoted digest concise enough for repeated loading.
+1. Compose the full research artifact as a single markdown file (anywhere — a tempfile is fine).
+2. Call `save-research-memory.sh` with `--artifact <path>` and pipe a compact "what matters" digest on stdin.
+3. The script is the single writer for the research dir — it creates `~/.pai/MEMORY/RESEARCH/YYYY-MM/YYYY-MM-DD_topic-slug/` and writes `REPORT.md` (full artifact), `SUMMARY.md` (compact), `WHAT_MATTERS.md` (digest), and overwrites `~/.pai/MEMORY/LEARNING/latest.md`. Do not write to `~/.pai/MEMORY/RESEARCH/` directly.
 
 Use:
 
 ```bash
-cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "<topic>" --mode "<quick|standard|extensive|deep>" --sources "<comma-separated verified urls>" --next "<optional next action>"
+cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "<topic>" --mode "<quick|standard|extensive|deep>" --sources "<comma-separated verified urls>" --next "<optional next action>" --artifact /tmp/my-research-report.md
 [5-12 bullets or short paragraphs with only what matters]
 EOF
 ```
@@ -234,8 +234,9 @@ Rules:
 
 - `latest.md` must stay compact.
 - Preserve durable insight, not every intermediate note.
-- Keep exhaustive detail in the research artifact, not startup memory.
+- Keep exhaustive detail in `REPORT.md`, not startup memory.
 - If nothing durable was learned, skip promotion.
+- The script does not touch `active.md` — `active.md` is hand-curated (§ 14). Update it yourself if the research is worth surfacing in current/queued work.
 
 ---
 

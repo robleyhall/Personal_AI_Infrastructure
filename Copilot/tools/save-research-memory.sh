@@ -9,16 +9,22 @@ MODE=""
 TOPIC=""
 SOURCE_URLS=""
 NEXT_ACTIONS=""
+ARTIFACT=""
 
 usage() {
   cat <<'EOF' >&2
-usage: save-research-memory.sh --topic "..." --mode quick|standard|extensive|deep [--sources "url1, url2"] [--next "next action"]
+usage: save-research-memory.sh --topic "..." --mode quick|standard|extensive|deep [--sources "url1, url2"] [--next "next action"] [--artifact <path-to-full-report>]
 
-Reads a markdown summary from stdin and writes:
+Reads a markdown "what matters" digest from stdin and writes:
   - ~/.pai/MEMORY/RESEARCH/YYYY-MM/YYYY-MM-DD_topic-slug/SUMMARY.md
   - ~/.pai/MEMORY/RESEARCH/YYYY-MM/YYYY-MM-DD_topic-slug/WHAT_MATTERS.md
-  - ~/.pai/MEMORY/WORK/active.md
   - ~/.pai/MEMORY/LEARNING/latest.md
+
+If --artifact is given, the file at <path> is copied into the research dir as
+REPORT.md and surfaced in latest.md as the primary full-report pointer.
+
+Does NOT touch ~/.pai/MEMORY/WORK/active.md — that file is curated by hand
+per the single-overwritten-block convention; do not append there.
 EOF
   exit 2
 }
@@ -29,11 +35,17 @@ while [[ $# -gt 0 ]]; do
     --mode) MODE="${2:-}"; shift 2 ;;
     --sources) SOURCE_URLS="${2:-}"; shift 2 ;;
     --next) NEXT_ACTIONS="${2:-}"; shift 2 ;;
+    --artifact) ARTIFACT="${2:-}"; shift 2 ;;
     *) usage ;;
   esac
 done
 
 [[ -n "$TOPIC" && -n "$MODE" ]] || usage
+
+if [[ -n "$ARTIFACT" && ! -r "$ARTIFACT" ]]; then
+  echo "save-research-memory: --artifact path not readable: $ARTIFACT" >&2
+  exit 1
+fi
 
 slugify() {
   printf '%s' "$1" \
@@ -53,10 +65,10 @@ TOPIC_SLUG="$(slugify "$TOPIC")"
 RESEARCH_DIR="$PAI_DIR/MEMORY/RESEARCH/$MONTH_PREFIX/${DATE_PREFIX}_${TOPIC_SLUG}"
 SUMMARY_FILE="$RESEARCH_DIR/SUMMARY.md"
 WHAT_MATTERS_FILE="$RESEARCH_DIR/WHAT_MATTERS.md"
-ACTIVE_FILE="$PAI_DIR/MEMORY/WORK/active.md"
+REPORT_FILE="$RESEARCH_DIR/REPORT.md"
 LEARNING_FILE="$PAI_DIR/MEMORY/LEARNING/latest.md"
 
-mkdir -p "$RESEARCH_DIR" "$(dirname "$ACTIVE_FILE")" "$(dirname "$LEARNING_FILE")"
+mkdir -p "$RESEARCH_DIR" "$(dirname "$LEARNING_FILE")"
 
 SUMMARY_CONTENT="$(cat)"
 [[ -n "$SUMMARY_CONTENT" ]] || { echo "save-research-memory: stdin summary is empty" >&2; exit 1; }
@@ -82,6 +94,11 @@ cat >"$WHAT_MATTERS_FILE" <<EOF
 - **Summary artifact:** $SUMMARY_FILE
 EOF
 
+if [[ -n "$ARTIFACT" ]]; then
+  cp "$ARTIFACT" "$REPORT_FILE"
+  printf -- '- **Full report:** %s\n' "$REPORT_FILE" >>"$WHAT_MATTERS_FILE"
+fi
+
 if [[ -n "$SOURCE_URLS" ]]; then
   printf -- '- **Verified sources:** %s\n' "$SOURCE_URLS" >>"$WHAT_MATTERS_FILE"
 fi
@@ -92,29 +109,21 @@ fi
 
 printf '\n## Digest\n\n%s\n' "$WHAT_MATTERS_CONTENT" >>"$WHAT_MATTERS_FILE"
 
-cat >>"$ACTIVE_FILE" <<EOF
-
-## Research Snapshot — $DATE_PREFIX — $TOPIC
-
-- **Mode:** $MODE
-- **Artifact:** $SUMMARY_FILE
-- **What matters:** $WHAT_MATTERS_FILE
-EOF
-
-if [[ -n "$NEXT_ACTIONS" ]]; then
-  printf -- '- **Next actions:** %s\n' "$NEXT_ACTIONS" >>"$ACTIVE_FILE"
-fi
-
-printf '\n%s\n' "$WHAT_MATTERS_CONTENT" >>"$ACTIVE_FILE"
-
 cat >"$LEARNING_FILE" <<EOF
 # Latest Research Memory
 
 - **Captured:** $TIMESTAMP_UTC
 - **Topic:** $TOPIC
 - **Mode:** $MODE
+EOF
+
+if [[ -n "$ARTIFACT" ]]; then
+  printf -- '- **Full report:** %s\n' "$REPORT_FILE" >>"$LEARNING_FILE"
+fi
+
+cat >>"$LEARNING_FILE" <<EOF
 - **What matters:** $WHAT_MATTERS_FILE
-- **Artifact:** $SUMMARY_FILE
+- **Summary:** $SUMMARY_FILE
 EOF
 
 if [[ -n "$NEXT_ACTIONS" ]]; then
@@ -123,4 +132,4 @@ fi
 
 printf '\n## Digest\n\n%s\n' "$WHAT_MATTERS_CONTENT" >>"$LEARNING_FILE"
 
-printf '%s\n' "$WHAT_MATTERS_FILE"
+printf '%s\n' "$RESEARCH_DIR"

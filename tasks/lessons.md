@@ -168,3 +168,22 @@
 **Fix:** Moved `~/.pai/PAI/USER/TELOS` → `~/.pai/USER/TELOS`, removed empty `~/.pai/PAI/`, and ran a plain-string sed replacing `~/.pai/PAI/USER/` with `~/.pai/USER/` across every non-memory file in both the repo (`Copilot/skills/`) and the installed tree (`~/.pai/skills/` + `~/.pai/USER/ABOUTME.md`). Memory files (MEMORY/LEARNING, RELATIONSHIP, WORK/GAPS) intentionally left alone — they record the bug as history.
 
 **Rule:** Lesson 11 is closed for the `PAI/USER/` collapse. Remaining lesson-11-adjacent issues — phantom root-level paths like `~/.pai/PAI/SKILL.md`, `~/.pai/PAI/Tools/...`, `~/.pai/PAI/Prompting.md` — are a *different* bug and tracked in `~/.pai/MEMORY/WORK/active.md` under "Phantom-PAI-root cleanup."
+
+---
+
+## Session: 2026-04-22 — Copilot Audit Phase 1 research
+
+### Lesson 16: Research memory protocol had a duplicate-artifact trap
+
+**What happened:** Ran Phase 1 of the Copilot Environment Audit. Followed § 9 of the global instructions literally — "save the full artifact under `~/.pai/MEMORY/RESEARCH/...`" — and wrote a 22KB REPORT.md into a `<UTCtimestamp>_<slug>/` dir. Then ran `save-research-memory.sh` as the same § 9 prescribes, which created its **own** `YYYY-MM/YYYY-MM-DD_slug/` dir with SUMMARY.md + WHAT_MATTERS.md. Result: two directories for one research run, with `latest.md` pointing only at the script's dir — the 22KB report was orphaned and invisible. The script also silently appended a "Research Snapshot" block to `active.md`, duplicating the curated queued entry and violating the § 14 single-block rule.
+
+**Fix:**
+- Canonical layout is *one dir per research run*, created by the script: `~/.pai/MEMORY/RESEARCH/YYYY-MM/YYYY-MM-DD_slug/` containing `REPORT.md` (full), `SUMMARY.md`, `WHAT_MATTERS.md`.
+- Added `--artifact <path>` flag to `save-research-memory.sh` so the full report is copied into the canonical dir as `REPORT.md` in one call.
+- Removed the script's append-to-`active.md` behavior — `active.md` is hand-curated, not machine-appended.
+- `latest.md` now surfaces `Full report`, `What matters`, and `Summary` paths.
+- Rewrote § 9 in `.github/copilot-instructions.md` to reflect reality: compose the full artifact to a tempfile, then invoke the script once with `--artifact`; the script is the single writer for the research dir.
+
+**Rule:** There is exactly one writer for `~/.pai/MEMORY/RESEARCH/` — `save-research-memory.sh`. Never hand-write a sibling directory next to it. For any research of meaningful size, pass `--artifact <tempfile>` so the full report lives in the same dir as the digest. Never append to `active.md` from a script — that file is curated by hand per § 14.
+
+**Commit:** (pending)
