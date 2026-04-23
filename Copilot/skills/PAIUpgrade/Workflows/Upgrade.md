@@ -1,5 +1,7 @@
 # Upgrade Workflow
 
+> **Copilot port note:** This workflow references upstream skill paths (e.g., `skills/_SYSTEM/Workflows/DocumentSession.md`) that **do not exist in the Copilot port**. They are upstream examples, retained verbatim so the recommendations engine produces coherent output, but the referenced paths are phantom here. Cross-check any filesystem path in the tables below against `~/.pai/skills/` before acting. The `_SYSTEM/` private-skill namespace is a SYSTEM_USER_EXTENDABILITY upstream convention that the Copilot port has not adopted.
+
 ## Voice Notification
 
 ```bash
