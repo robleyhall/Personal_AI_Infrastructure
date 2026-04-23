@@ -76,6 +76,53 @@ All Tier 1 output `rsync`-ed into `~/.pai/` (not via `install.sh` — that would
 
 ---
 
+## Tier 2 port — 2026-04-23
+
+**Fallback tag:** `pre-tier2-port-20260423T1101Z`
+**Branch:** `feat/copilot-migration`
+**Scope:** USER/ scaffolds, PRD-per-task tooling, LEARNING SYNTHESIS/REFLECTIONS buckets.
+
+### Copilot/PAI/USER/ — USER-tier scaffolds
+Ported upstream `PAI/USER/` scaffold buckets (README-only) with the standard banner:
+- `ACTIONS/`, `BUSINESS/`, `FLOWS/`, `PIPELINES/`, `PROJECTS/`, `STATUSLINE/`, `TERMINAL/`, `WORK/`, `Workflows/`
+- Parent `USER/README.md` — Copilot-authored overview mapping the bucket set to Robley's existing `~/.pai/USER/` layout (ABOUTME / DAIDENTITY / AISTEERINGRULES / TELOS / SKILLCUSTOMIZATIONS already populated).
+
+**Intentionally NOT re-ported:** `TELOS/README.md` and `SKILLCUSTOMIZATIONS/README.md` — upstream copies would clobber live user content. Already-present runtime dirs (`~/.pai/USER/TELOS/`, `~/.pai/USER/SKILLCUSTOMIZATIONS/`) left untouched by rsync.
+
+**STATUSLINE caveat:** bucket references Claude Code's statusline API. Banner flags it as non-functional in Copilot CLI. Real equivalent (tmux overlay) remains Tier 3.
+
+### Copilot/tools/new-prd.sh — PRD scaffolder
+New tool. Creates `~/.pai/MEMORY/WORK/<UTC>_<slug>/PRD.md` with upstream PRDFORMAT v2.0 frontmatter (task/slug/effort/phase/progress/mode/started/updated) + ISC scaffold.
+
+**Divergence from upstream:** upstream fires `PRDGenerate.hook.ts` on Algorithm start; Copilot CLI has no hook API. Algorithm-mode invokes `new-prd.sh` explicitly at Phase 3 (PLAN). Existing `~/.pai/MEMORY/WORK/<slug>/` dirs from prior sessions do NOT carry PRD frontmatter — a one-time backfill pass is optional Tier 3 work.
+
+### Copilot/tools/capture-work-learning.sh — `--reflection` flag
+Extended. New `--reflection` opt-in also appends a JSONL line to `MEMORY/LEARNING/REFLECTIONS/algorithm-reflections.jsonl`. Backward compatible: default behavior unchanged.
+
+JSONL schema: `{ timestamp, slug, category, session, artifact, content }`. Python3 handles JSON encoding to safely marshal arbitrary markdown content (avoids shell-quoting pitfalls).
+
+### MEMORY/LEARNING/SYNTHESIS/ + REFLECTIONS/
+New buckets alongside existing `FAILURES/` and `SIGNALS/`. README stubs document:
+- **SYNTHESIS/** — weekly/monthly rollups of ratings + learnings. Manual for now; upstream's `LearningPatternSynthesis.ts` aggregation is Tier 3.
+- **REFLECTIONS/** — append-only `algorithm-reflections.jsonl` for Phase-7 LEARN captures.
+
+Runtime dirs created under `~/.pai/MEMORY/LEARNING/` (previously missing).
+
+### Runtime sync (Tier 2)
+- `Copilot/PAI/USER/` → `~/.pai/PAI/USER/`
+- `Copilot/PAI/MEMORY/LEARNING/` → `~/.pai/PAI/MEMORY/LEARNING/`
+- `Copilot/tools/new-prd.sh` → `~/.pai/tools/new-prd.sh` (+x)
+- `Copilot/tools/capture-work-learning.sh` → `~/.pai/tools/capture-work-learning.sh` (+x)
+- `mkdir -p ~/.pai/MEMORY/LEARNING/{SYNTHESIS,REFLECTIONS}` + `touch REFLECTIONS/algorithm-reflections.jsonl`
+
+### Tier 3 backlog (deferred, not blocked by Tier 2)
+- Hook-equivalents via sidecar: SecurityValidator, PRDSync (auto-bump `updated:` + `phase:`), RatingCapture auto-fire, `LearningPatternSynthesis` aggregation
+- Tmux statusline overlay, tab titles
+- Phantom-PAI-root cleanup remaining ~9 files (tracked in `active.md`)
+- Optional: backfill PRD frontmatter onto existing `MEMORY/WORK/<slug>/` dirs
+
+---
+
 ## Cross-reference
 - Skill-level mechanical ports: [`skills/PORTING_NOTES.md`](skills/PORTING_NOTES.md)
 - Research skill specifics: [`skills/Research/PORTING_NOTES.md`](skills/Research/PORTING_NOTES.md)
