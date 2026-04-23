@@ -187,3 +187,27 @@
 **Rule:** There is exactly one writer for `~/.pai/MEMORY/RESEARCH/` — `save-research-memory.sh`. Never hand-write a sibling directory next to it. For any research of meaningful size, pass `--artifact <tempfile>` so the full report lives in the same dir as the digest. Never append to `active.md` from a script — that file is curated by hand per § 14.
 
 **Commit:** (pending)
+
+---
+
+## Session: 2026-04-22 PM — Cross-session engagement tracking
+
+### Lesson 17: `grep -c` with `|| echo 0` produces `0\n0` on no-match
+
+**What happened:** In `capture_engagement()` I wrote `c="$(grep -cE '...' file 2>/dev/null || echo 0)"`, then `open_todos=$((open_todos + c))`. When the file existed but had zero matches, `grep -c` exited 1 (per spec) *and* printed "0"; the fallback `echo 0` then printed another "0", leaving `c="0\n0"`. Arithmetic expansion on that failed and aborted the capture function under `set -u` in the subshell test harness.
+
+**Fix:** `c="$(grep -cE '...' file 2>/dev/null)" || c=0` plus a regex guard `[[ "$c" =~ ^[0-9]+$ ]] || c=0`. `grep -c` already emits the count on stdout; the fallback is only needed when the command itself errors (e.g. missing file).
+
+**Rule:** Never use `|| echo <value>` as an exit-code fallback for a command that already prints to stdout. Use `|| VAR=<value>` to set the variable *after* the failed assignment, and validate the captured value before arithmetic.
+
+**Commit:** (pending)
+
+### Lesson 18: `install.sh --delete` is unsafe during in-flight state changes
+
+**What happened:** `Copilot/install.sh` uses `rsync -a --delete` for `sidecar/` and `tools/` to guarantee a clean install. Mid-session, running install.sh would nuke any uncommitted state under `~/.pai/` (e.g., newly-created `MEMORY/WORK/projects/engagement.jsonl` that the repo doesn't track).
+
+**Fix:** For incremental changes during a session, sync only the specific touched files (`rsync -a Copilot/sidecar/pai-copilot ~/.pai/sidecar/pai-copilot`, etc.) rather than running the full installer.
+
+**Rule:** `install.sh` is for a clean install or controlled upgrade — never run it mid-session. When you've edited files in `Copilot/sidecar/` or `Copilot/tools/` and need them active, rsync the specific files. Save the full install for a post-commit verification pass.
+
+**Commit:** (pending)

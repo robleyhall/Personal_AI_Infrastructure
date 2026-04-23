@@ -105,11 +105,22 @@ collect_failures() {
   fi
 }
 
+# ── Project engagement (active + stale) ──────────────────────────────
+collect_engagement() {
+  local distiller="$PAI_DIR/tools/engagement-distill.sh"
+  [[ -x "$distiller" ]] || return 0
+  local section
+  section="$("$distiller" 2>/dev/null || true)"
+  [[ -n "$section" ]] || return 0
+  OUTPUT="${OUTPUT}${section}\n\n"
+}
+
 # ── Assemble ─────────────────────────────────────────────────────────
 collect_recent "ALGORITHM"
 collect_recent "SYSTEM"
 collect_wisdom
 collect_failures
+collect_engagement
 
 if [[ -n "$OUTPUT" ]]; then
   printf '## Session Memory Digest\n\n'

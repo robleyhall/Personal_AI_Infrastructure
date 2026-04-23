@@ -55,11 +55,54 @@ materialize_startup_digest() {
   fi
 }
 
+# capture_engagement — record one line of project-engagement signal per launch.
+# Only fires when $PWD is inside a git repo; otherwise no-op. Appends JSONL to
+# $PAI_DIR/MEMORY/WORK/projects/engagement.jsonl. Per-project markdown files
+# are (re)built by engagement-distill.sh, which learning-readback.sh calls.
+capture_engagement() {
+  local repo_root
+  repo_root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" || return 0
+  [[ -n "$repo_root" ]] || return 0
+
+  local projects_dir="$PAI_DIR/MEMORY/WORK/projects"
+  mkdir -p "$projects_dir"
+
+  local repo_slug
+  repo_slug="$(basename "$repo_root" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed -e 's/--*/-/g' -e 's/^-//' -e 's/-$//')"
+
+  local open_todos=0
+  for todo_file in "$repo_root/tasks/todo.md" "$repo_root/TODO.md" "$repo_root/tasks/TODO.md"; do
+    if [[ -f "$todo_file" ]]; then
+      local c
+      # grep -c always prints a count on stdout; swallow its non-zero exit on no-match.
+      c="$(grep -cE '^[[:space:]]*-[[:space:]]*\[[[:space:]]\]' "$todo_file" 2>/dev/null)" || c=0
+      # Guard against empty or multi-line content.
+      [[ "$c" =~ ^[0-9]+$ ]] || c=0
+      open_todos=$((open_todos + c))
+    fi
+  done
+
+  local ts
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+  # Escape paths for JSON (backslash and double-quote).
+  local esc_root esc_cwd
+  esc_root="$(printf '%s' "$repo_root" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+  esc_cwd="$(printf '%s' "$PWD" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+
+  printf '{"ts":"%s","session_id":"%s","cwd":"%s","repo_root":"%s","repo_slug":"%s","open_todos":%d}\n' \
+    "$ts" "$SESSION_ID" "$esc_cwd" "$esc_root" "$repo_slug" "$open_todos" \
+    >>"$projects_dir/engagement.jsonl"
+
+  log "engagement captured repo=$repo_slug open_todos=$open_todos"
+}
+
 pre_session() {
   export PAI_DIR PAI_SESSION_ID="$SESSION_ID"
 
   set_tab_title "PAI"
   start_voice_server
+  capture_engagement
   materialize_startup_digest
 
   log "session-start id=$SESSION_ID cwd=$PWD"
