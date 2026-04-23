@@ -36,7 +36,7 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 **Before starting any task with this skill, load complete PAI context:**
 
-`read ~/.pai/PAI/SKILL.md`
+`read ~/.copilot/copilot-instructions.md`
 
 
 ## When to Activate This Skill

@@ -98,7 +98,7 @@ TRANSPARENT: Use Images skill to remove background for overlay use
 **For transparent background** — use the **Images skill** for background removal:
 
 ```bash
-bun ~/.pai/PAI/Tools/RemoveBg.ts /path/to/visualization.png
+bun ~/.pai/PAI/Tools/RemoveBg.ts  # NOT PORTED in Copilot (upstream bun tool; see Copilot/PORTING_NOTES.md) /path/to/visualization.png
 ```
 
 **See:** `~/.pai/skills/Images/Workflows/BackgroundRemoval.md` for full documentation.

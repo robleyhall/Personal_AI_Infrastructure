@@ -304,7 +304,7 @@ This system is based on research from:
 
 ## Related Documentation
 
-- `~/.pai/PAI/Prompting.md` (Templating section)
+- `~/.pai/skills/Prompting/README.md` (Templating section)
 - `~/.pai/History/research/2025-12/2025-12-09-templating-system-research.md`
 - `~/.pai/History/learnings/2025-12/2025-12-09-021700_LEARNING_complete-templating-system-and-evals-integration.md`
 - `~/.pai/skills/Utilities/Evals/SKILL.md`

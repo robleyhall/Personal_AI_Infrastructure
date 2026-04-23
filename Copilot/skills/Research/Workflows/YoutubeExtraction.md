@@ -6,7 +6,7 @@ Extract content from YouTube videos using Fabric CLI. Automatically downloads, t
 
 **Before starting any task with this skill, load complete PAI context:**
 
-`read ~/.pai/PAI/SKILL.md`
+`read ~/.copilot/copilot-instructions.md`
 
 This provides access to:
 - Complete contact list (Angela, Bunny, Saša, Greg, team members)

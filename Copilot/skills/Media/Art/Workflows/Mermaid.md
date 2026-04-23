@@ -669,7 +669,7 @@ GOING INTO BLOG/WEBSITE: Remove background for transparency
 **For blog/website use** — use the **Images skill** for background removal:
 
 ```bash
-bun ~/.pai/PAI/Tools/RemoveBg.ts /path/to/mermaid-diagram.png
+bun ~/.pai/PAI/Tools/RemoveBg.ts  # NOT PORTED in Copilot (upstream bun tool; see Copilot/PORTING_NOTES.md) /path/to/mermaid-diagram.png
 ```
 
 **See:** `~/.pai/skills/Images/Workflows/BackgroundRemoval.md` for full documentation.
