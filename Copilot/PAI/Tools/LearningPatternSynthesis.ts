@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// Ported from upstream danielmiessler/Personal_AI_Infrastructure v4.0.3. Paths rewritten .claude→.pai. Run with bun.
 /**
  * LearningPatternSynthesis - Aggregate ratings into actionable patterns
  *
@@ -24,8 +25,8 @@ import * as path from "path";
 // Configuration
 // ============================================================================
 
-const PAI_DIR = path.join(process.env.HOME!, ".pai");
-const LEARNING_DIR = path.join(PAI_DIR, "MEMORY", "LEARNING");
+const CLAUDE_DIR = path.join(process.env.HOME!, ".pai");
+const LEARNING_DIR = path.join(CLAUDE_DIR, "MEMORY", "LEARNING");
 const RATINGS_FILE = path.join(LEARNING_DIR, "SIGNALS", "ratings.jsonl");
 const SYNTHESIS_DIR = path.join(LEARNING_DIR, "SYNTHESIS");
 
@@ -336,20 +337,7 @@ const allRatings: Rating[] = content
   .filter(line => line.trim())
   .map(line => {
     try {
-      // Accept both upstream Claude schema and Copilot capture-rating.sh schema.
-      // Copilot writes: {ts, rating, session, source, comment?, summary}
-      // Upstream expects: {timestamp, rating, session_id, source, sentiment_summary, confidence, comment?}
-      const raw = JSON.parse(line);
-      const normalized: Rating = {
-        timestamp: raw.timestamp ?? raw.ts,
-        rating: raw.rating,
-        session_id: raw.session_id ?? raw.session ?? '',
-        source: raw.source ?? 'explicit',
-        sentiment_summary: raw.sentiment_summary ?? raw.summary ?? raw.comment ?? '',
-        confidence: typeof raw.confidence === 'number' ? raw.confidence : 1,
-        comment: raw.comment,
-      };
-      return normalized.timestamp ? normalized : null;
+      return JSON.parse(line);
     } catch {
       return null;
     }
