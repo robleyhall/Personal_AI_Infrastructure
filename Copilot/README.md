@@ -16,6 +16,21 @@ Copilot/
 ├── README.md               # (this file)
 ├── Algorithm.md            # Copilot-adapted 7-phase reference
 ├── ContextRouting.md       # Repo-local routing for migration tasks
+├── PAI/                    # SYSTEM-tier upstream-parity docs (v4.0.3 port)
+│   ├── AISTEERINGRULES.md, CLIFIRSTARCHITECTURE.md, CONTEXT_ROUTING.md,
+│   │   DOCUMENTATIONINDEX.md, FLOWS.md, MEMORYSYSTEM.md, PAIAGENTSYSTEM.md,
+│   │   PAISYSTEMARCHITECTURE.md, PIPELINES.md, PRDFORMAT.md, SKILLSYSTEM.md,
+│   │   SYSTEM_USER_EXTENDABILITY.md, THEDELEGATIONSYSTEM.md, THEFABRICSYSTEM.md,
+│   │   THEHOOKSYSTEM.md, THENOTIFICATIONSYSTEM.md, TOOLS.md, ACTIONS.md, CLI.md
+│   ├── ACTIONS/, FLOWS/, PIPELINES/   # subdir READMEs
+│   └── Algorithm/          # historical algorithm breakdowns (v3.5, v3.7)
+├── agents/                 # Agent profile catalog (14 profiles)
+│   └── Algorithm.md, Architect.md, Artist.md, BrowserAgent.md,
+│       ClaudeResearcher.md, CodexResearcher.md, Designer.md, Engineer.md,
+│       GeminiResearcher.md, GrokResearcher.md, Pentester.md,
+│       PerplexityResearcher.md, QATester.md, UIReviewer.md
+├── state/                  # Runtime state skeleton (tasks/, queue/, sessions/)
+│   └── README.md           # Layout + divergence from upstream
 ├── VoiceServer/            # Local TTS via macOS `say` (replaces ElevenLabs)
 │   ├── server.ts
 │   ├── start.sh
@@ -25,8 +40,10 @@ Copilot/
 ├── tools/
 │   ├── capture-rating.sh       # Explicit rating → ratings.jsonl + failure capture
 │   ├── capture-work-learning.sh # Session learning → ALGORITHM/ or SYSTEM/
-│   ├── learning-readback.sh     # Compact startup digest from recent learnings
-│   └── save-research-memory.sh  # Research artifact + promotion to startup memory
+│   ├── engagement-distill.sh   # Cross-session project engagement → per-project .md
+│   ├── harvest-session.sh      # Backfill learnings from past session events
+│   ├── learning-readback.sh    # Compact startup digest from recent learnings
+│   └── save-research-memory.sh # Research artifact + promotion to startup memory
 └── skills/
     ├── Research/           # Ported research workflows
     ├── FirstPrinciples/    # Reasoning from fundamentals
@@ -39,6 +56,14 @@ Copilot/
     ├── Security/           # AnnualReports, PromptInjection, Recon, SECUpdates, WebAssessment
     └── PORTING_NOTES.md    # Batch-port substitution log
 ```
+
+## Upstream parity status
+
+Tier 1 port (SYSTEM docs + agents + STATE tree) complete as of tag
+`pre-tier1-port-20260423T0127Z` + successor. Tier 2 (PRD per-task dirs, USER
+subdirs, FAILURES/SYNTHESIS/REFLECTIONS) and Tier 3 (hook-equivalents,
+statusline overlay, tab titles) pending. See `~/.pai/MEMORY/WORK/active.md`
+for status.
 
 ## What's in the spike
 
