@@ -211,3 +211,32 @@
 **Rule:** `install.sh` is for a clean install or controlled upgrade — never run it mid-session. When you've edited files in `Copilot/sidecar/` or `Copilot/tools/` and need them active, rsync the specific files. Save the full install for a post-commit verification pass.
 
 **Commit:** (pending)
+
+---
+
+## Session: 2026-04-23 — Tier 1 upstream PAI port
+
+### Lesson 19: Port banners alone do not document divergence — need a PORTING_NOTES ledger
+
+**What happened:** After completing a Tier 1 port of 19 SYSTEM docs + 14 agent profiles + STATE tree from upstream v4.0.3, every ported file had a port banner at top citing upstream + path rewrites. I considered the record complete. It wasn't — `Copilot/skills/PORTING_NOTES.md` only covered skill-level mechanical ports. There was no single place that documented **which upstream files were intentionally NOT ported** (`PAI/README.md`, `PAI/SKILL.md`, `PAI/Tools/`, `PAI/USER/`), or the architectural choice to use the `Copilot/PAI/` subnamespace instead of a flat layout. Future maintainers (including future-me) pulling upstream would have to reverse-engineer those decisions.
+
+**Fix:** Added a repo-root `Copilot/PORTING_NOTES.md` documenting: upstream baseline version, substitution rules, blanket "not ported" list (hooks, statusline, settings.json, installer), and a Tier 1 section enumerating intentional exclusions, design choices, and commit refs. Cross-linked with `Copilot/skills/PORTING_NOTES.md`.
+
+**Rule:** Every mechanical port lands **three things**, not two:
+1. Per-file port banner citing upstream version + rewrites
+2. Entry in `Copilot/PORTING_NOTES.md` (platform) or `Copilot/skills/PORTING_NOTES.md` (skill), naming **intentional exclusions** and **design divergences**
+3. Commit refs in the notes so the port is reconstructable from git history
+
+If something was deliberately skipped from upstream, write it down. Silent omissions become phantom refs later.
+
+**Commit:** `6391184`
+
+### Lesson 20: Use `rsync` of specific files, never `install.sh`, to activate mid-session ports
+
+**What happened:** After porting 19 docs + 14 agent profiles into `Copilot/PAI/` and `Copilot/agents/`, I needed them live under `~/.pai/` so this session (and the next) could actually reach them. Running `install.sh` was tempting — it's the "canonical" installer — but I avoided it.
+
+**Fix:** `rsync -a Copilot/PAI/ ~/.pai/PAI/ && rsync -a Copilot/agents/ ~/.pai/agents/`. Specific dirs, no `--delete`, preserves everything else under `~/.pai/`.
+
+**Rule:** Reinforces Lesson 18. `install.sh --delete` is for clean installs only. Any mid-session activation of newly-ported content = targeted `rsync -a` of just the changed paths. For agent dirs that don't exist yet under `~/.pai/`, `rsync` creates them safely. Never run the full installer to "just pick up" an incremental change.
+
+**Commit:** part of `134c93c` + `339c29e` workflow
