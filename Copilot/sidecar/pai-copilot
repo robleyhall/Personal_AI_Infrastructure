@@ -107,6 +107,7 @@ pre_session() {
 
   log "session-start id=$SESSION_ID cwd=$PWD"
   echo "$SESSION_ID $(date -u +%s) start" >>"$PAI_STATE_DIR/sessions.log"
+  touch "$PAI_STATE_DIR/session-${SESSION_ID}.started"
 }
 
 post_session() {
@@ -129,7 +130,7 @@ cleanup_stale_state() {
   log "cleanup complete"
 }
 
-# weekly_synthesis — run synthesize-learnings once per ISO week.
+# weekly_synthesis — run LearningPatternSynthesis once per ISO week.
 # Stamp-file gated; non-fatal. Replaces upstream's cron-style
 # LearningPatternSynthesis.hook.ts (Copilot CLI has no hook API).
 weekly_synthesis() {
@@ -144,16 +145,17 @@ weekly_synthesis() {
     return 0
   fi
 
-  local synth="$PAI_DIR/tools/synthesize-learnings.sh"
-  if [[ -x "$synth" ]]; then
-    if "$synth" >>"$PAI_LOG_DIR/synthesis.log" 2>&1; then
+  # Invoke the bun-native upstream tool directly (ported to ~/.pai/PAI/Tools/).
+  local synth="$PAI_DIR/PAI/Tools/LearningPatternSynthesis.ts"
+  if [[ -f "$synth" ]] && command -v bun >/dev/null 2>&1; then
+    if bun "$synth" --week >>"$PAI_LOG_DIR/synthesis.log" 2>&1; then
       printf '%s\n' "$week_now" >"$stamp"
       log "synthesis ran for week $week_now"
     else
       log "synthesis failed for week $week_now (see synthesis.log)"
     fi
   else
-    log "synthesis skipped (script missing: $synth)"
+    log "synthesis skipped (bun or tool missing)"
   fi
 }
 
@@ -179,6 +181,29 @@ post_session_tier3() {
   # Both non-fatal.
   weekly_synthesis
   integrity_scan
+  prd_sync
+}
+
+# prd_sync — approximates upstream PRDSync.hook.ts (PostToolUse/Write+Edit).
+# Bumps `updated:` timestamp in any MEMORY/WORK/<slug>/*.md PRD files that
+# were modified during this session. Only touches files with PRDFORMAT v2.0
+# frontmatter (first 10 lines contain `task:` and `updated:`).
+prd_sync() {
+  local workdir="$PAI_DIR/MEMORY/WORK"
+  [[ -d "$workdir" ]] || return 0
+  local session_start="$PAI_STATE_DIR/session-${SESSION_ID}.started"
+  [[ -f "$session_start" ]] || return 0
+  local now
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  # Find PRD files modified since session start
+  find "$workdir" -type f -name '*.md' -newer "$session_start" -print 2>/dev/null | while read -r f; do
+    # Must be PRDFORMAT v2.0 (has task: + updated: in first 12 lines)
+    head -12 "$f" | grep -qE '^task:' || continue
+    head -12 "$f" | grep -qE '^updated:' || continue
+    # Bump updated: in place (macOS sed compatible)
+    /usr/bin/sed -i '' -E "1,12 s|^updated:.*|updated: ${now}|" "$f" 2>/dev/null && \
+      log "prd_sync: bumped updated in $(basename "$(dirname "$f")")/$(basename "$f")"
+  done >>"$PAI_LOG_DIR/prd-sync.log" 2>&1 || true
 }
 
 require_copilot() {
