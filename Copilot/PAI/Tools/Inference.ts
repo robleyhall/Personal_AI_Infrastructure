@@ -32,7 +32,32 @@
  * ============================================================================
  */
 
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
+
+// Copilot-port shim: when PAI_INFERENCE_BACKEND=copilot, or when `claude`
+// is not on PATH, route to `gh models run` instead. Requires the
+// `github/gh-models` gh extension. Models map as follows:
+//   fast     → openai/gpt-4o-mini
+//   standard → openai/gpt-4o
+//   smart    → openai/o1
+// Override any of them via env: PAI_INFERENCE_MODEL_{FAST,STANDARD,SMART}.
+function inferenceBackend(): 'claude' | 'gh' {
+  const explicit = process.env.PAI_INFERENCE_BACKEND;
+  if (explicit === 'copilot' || explicit === 'gh') return 'gh';
+  if (explicit === 'claude') return 'claude';
+  const probe = spawnSync('which', ['claude'], { stdio: 'pipe' });
+  return probe.status === 0 ? 'claude' : 'gh';
+}
+
+function ghModelFor(level: InferenceLevel): string {
+  const override = process.env[`PAI_INFERENCE_MODEL_${level.toUpperCase()}`];
+  if (override) return override;
+  return level === 'fast'
+    ? 'openai/gpt-4o-mini'
+    : level === 'smart'
+      ? 'openai/o1'
+      : 'openai/gpt-4o';
+}
 
 export type InferenceLevel = 'fast' | 'standard' | 'smart';
 
@@ -77,25 +102,36 @@ export async function inference(options: InferenceOptions): Promise<InferenceRes
     delete env.ANTHROPIC_API_KEY;
     delete env.CLAUDECODE;
 
-    const args = [
-      '--print',
-      '--model', config.model,
-      '--tools', '',  // Disable tools for faster response
-      '--output-format', 'text',
-      '--setting-sources', '',  // Disable hooks to prevent recursion
-      '--system-prompt', options.systemPrompt,
-    ];
+    const backend = inferenceBackend();
+    const args = backend === 'gh'
+      ? [
+          'models', 'run',
+          '--system-prompt', options.systemPrompt,
+          ghModelFor(level),
+          options.userPrompt,
+        ]
+      : [
+          '--print',
+          '--model', config.model,
+          '--tools', '',
+          '--output-format', 'text',
+          '--setting-sources', '',
+          '--system-prompt', options.systemPrompt,
+        ];
 
     let stdout = '';
     let stderr = '';
 
-    const proc = spawn('claude', args, {
+    const proc = spawn(backend === 'gh' ? 'gh' : 'claude', args, {
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
-    // Write prompt via stdin to avoid ARG_MAX limits on large inputs
-    proc.stdin.write(options.userPrompt);
+    // Write prompt via stdin to avoid ARG_MAX limits on large inputs.
+    // For the gh backend, the prompt is passed positionally above; close stdin.
+    if (backend !== 'gh') {
+      proc.stdin.write(options.userPrompt);
+    }
     proc.stdin.end();
 
     proc.stdout.on('data', (data) => {

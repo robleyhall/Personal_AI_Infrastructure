@@ -94,3 +94,29 @@ cleanup → PORTING_NOTES overhaul → commit + push.
 - Atomic commits per bucket (sidecar / SecretScan / backfill / phantom
   cleanup / docs).
 - Rsync into `~/.pai/` after commits land.
+
+---
+
+## Tier 3+ addendum (2026-04-23)
+
+After Tier 3 landed, `bun 1.3.12` was confirmed installed on the host.
+This retrospectively invalidated deferral calls made in Tiers 1-3 that
+had assumed bun was unavailable. Tier 3+ executed a full bun-native
+expansion:
+
+- **Imported** 37 TS + 1 py tool from upstream `PAI/Tools/`, 5 TS from
+  `ACTIONS/lib/`, example pipeline YAML, and the `pipeline-monitor-ui/`
+  React app.
+- **Reverted** four shell duplicates (`secret-scan.sh`,
+  `synthesize-learnings.{sh,ts}`, `new-prd.sh`) in favor of their
+  upstream `.ts` originals.
+- **Shimmed** `Inference.ts` to `gh models run` via the
+  `github/gh-models` extension, unblocking `FailureCapture.ts`,
+  `IntegrityMaintenance.ts`, and the Wisdom*.ts triad.
+- **Added** PRDSync and FailureCapture approximations to the sidecar
+  and `capture-rating.sh` respectively.
+- **Ported** `statusline-command.sh` for tmux/manual use.
+
+See `Copilot/PORTING_NOTES.md` § "Tier 3+ expansion (2026-04-23)" for
+the authoritative running record. Only genuinely unportable items
+remain (per-tool-call hooks — no Copilot CLI hook API).

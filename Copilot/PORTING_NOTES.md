@@ -207,7 +207,7 @@ the upstream `.ts` directly.
 - **Per-tool-call hooks** — Copilot CLI has no hook API. `SecurityValidator`, `AgentExecutionGuard`, `SkillGuard`, `SetQuestionTab`, `QuestionAnswered`, `UpdateTabTitle` cannot fire mid-session; only AI-discipline approximations exist.
 - **Banner/PAILogo/neofetch** TS — cosmetic, skipped by design.
 - **`BuildCLAUDE.ts`, `RebuildPAI.ts`** — Claude-Code installer-side, skipped.
-- **`Inference.ts`** — Copilot CLI has its own model system; upstream's unified wrapper is redundant. Note: `FailureCapture.ts` and `IntegrityMaintenance.ts` upstream import `./Inference`; they compile (import is evaluated lazily) but will fail at runtime if those code paths are exercised. If needed, write a shim that delegates to `gh models run`.
+- **`Inference.ts`** — **Tier 3+ (2026-04-23) update**: shimmed to `gh models run` via the `github/gh-models` gh extension. Auto-detects: if `claude` is on PATH it still uses Claude; otherwise (or when `PAI_INFERENCE_BACKEND=copilot` is set) it calls `gh models run`. Model mapping is overridable via `PAI_INFERENCE_MODEL_{FAST,STANDARD,SMART}` env vars (defaults: `openai/gpt-4o-mini`, `openai/gpt-4o`, `openai/o1`). Smoke-tested: `PAI_INFERENCE_BACKEND=copilot bun Inference.ts --level fast "…" "…"` returns real model output. This unblocks `FailureCapture.ts`, `IntegrityMaintenance.ts`, and the Wisdom*.ts triad at runtime. Requires `gh extension install github/gh-models` once.
 
 ---
 
@@ -300,7 +300,7 @@ the upstream `.ts` directly.
 | `FailureCapture.ts` | 🕒 | `capture-rating.sh` (partial) | Copilot capture-rating writes a failure shell on ratings ≤3, but doesn't dump tool-call context (needs hook API). |
 | `FeatureRegistry.ts` | 🕒 | — | Skill feature enumeration; not wired. |
 | `GetCounts.ts`, `UpdateCounts.ts` (hook) | 🕒 | — | Document count maintenance. |
-| `Inference.ts` | ⏭ | Copilot model system | Redundant — Copilot CLI exposes models natively. |
+| `Inference.ts` | ✅ | `bun ~/.pai/PAI/Tools/Inference.ts` (Tier 3+ shim) | Auto-routes to `gh models run` via `github/gh-models` extension when `claude` is absent or `PAI_INFERENCE_BACKEND=copilot`. Model map overridable via env. |
 | `IntegrityMaintenance.ts` | ⚠️ | `pai-copilot post_session_tier3 > integrity_scan()` (Tier 3) | Sidecar does a lightweight regression scan; full upstream scope (doc-dependencies.json enforcement) is Tier 3b. |
 | `LearningPatternSynthesis.ts` | ✅ (bun) | `Copilot/PAI/Tools/LearningPatternSynthesis.ts`; sidecar calls it | Tier 3+ revert. Weekly stamp-gated run from sidecar POST. |
 | `LoadSkillConfig.ts` | 🕒 | — | Used by PAIUpgrade workflow; banner-flagged at phantom-cleanup. |
@@ -312,7 +312,7 @@ the upstream `.ts` directly.
 | `SessionHarvester.ts` | ✅ (equivalent) | `Copilot/tools/harvest-session.sh` | Session-folder harvester written for Copilot session format. |
 | `SessionProgress.ts` | 🕒 | — | Hook-dependent. |
 | `SplitAndTranscribe.ts` | 🕒 | — | Audio tooling; niche. |
-| `WisdomCrossFrameSynthesizer.ts`, `WisdomDomainClassifier.ts`, `WisdomFrameUpdater.ts` | 🕒 | — | TELOS wisdom-aggregation triad; requires Inference.ts. Tier 3b if wired. |
+| `WisdomCrossFrameSynthesizer.ts`, `WisdomDomainClassifier.ts`, `WisdomFrameUpdater.ts` | ✅ | `bun ~/.pai/PAI/Tools/Wisdom*.ts` | Runnable via bun; inference now satisfied by the Tier 3+ `Inference.ts` shim to `gh models run`. |
 | `YouTubeApi.ts` | 🕒 | — | Used by YouTube extraction workflow (phantom-cleaned in Tier 3). |
 
 ### `.claude/hooks/` — Hook handlers (from `settings.json`)
@@ -363,16 +363,20 @@ Upstream registers 22 handlers across 6 groups. Copilot CLI has **no hook API**.
 
 ### Explicitly NOT ported (Tier 3b deferred)
 
-| Item | Reason |
-|---|---|
-| Per-tool-call hooks (SecurityValidator live filter, PRDSync auto-bump, AgentExecutionGuard, SkillGuard, SetQuestionTab, QuestionAnswered) | Copilot CLI has no hook API. Approximation via instructions only. |
-| `statusline-command.sh` (1390 lines) | Claude Code statusline API. Tmux-overlay equivalent is Tier 3b. |
-| ACTIONS/PIPELINES runtime (`lib/runner.ts`, `pipeline-runner.ts`, example actions/pipelines) | Requires bun. Major new feature; defer until concrete use case. |
-| `Inference.ts` unified wrapper | Copilot CLI has its own model system. |
-| Banner/neofetch/PAILogo TS | Cosmetic. |
-| Wisdom*.ts triad (CrossFrame, Domain, Frame) | Depends on Inference.ts. |
-| Pipeline monitor UI | Depends on runtime. |
-| Remaining `PAI/Tools/*.ts` not cited above | Port individually if a skill/workflow demands it. |
+### Explicitly NOT ported (Tier 3b deferred) — outdated, see Tier 3+ section
+
+**Note:** this subsection predates Tier 3+. Most rows here are now closed. Kept for historical trace.
+
+| Item | Reason | Status (2026-04-23) |
+|---|---|---|
+| Per-tool-call hooks (SecurityValidator live filter, PRDSync auto-bump, AgentExecutionGuard, SkillGuard, SetQuestionTab, QuestionAnswered) | Copilot CLI has no hook API. Approximation via instructions only. | **Still unportable.** |
+| `statusline-command.sh` (1390 lines) | Claude Code statusline API. Tmux-overlay equivalent is Tier 3b. | ✅ ported Tier 3+ (tmux/manual). |
+| ACTIONS/PIPELINES runtime (`lib/runner.ts`, `pipeline-runner.ts`, example actions/pipelines) | Requires bun. Major new feature; defer until concrete use case. | ✅ ported Tier 3+. |
+| `Inference.ts` unified wrapper | Copilot CLI has its own model system. | ✅ shimmed to `gh models run` Tier 3+. |
+| Banner/neofetch/PAILogo TS | Cosmetic. | Skipped by design. |
+| Wisdom*.ts triad (CrossFrame, Domain, Frame) | Depends on Inference.ts. | ✅ ported Tier 3+ (runs via Inference shim). |
+| Pipeline monitor UI | Depends on runtime. | ✅ ported Tier 3+ (React UI copied). |
+| Remaining `PAI/Tools/*.ts` not cited above | Port individually if a skill/workflow demands it. | ✅ all 37 tools ported Tier 3+. |
 
 ### Procedure to re-run this port from scratch
 
