@@ -127,3 +127,215 @@ Runtime dirs created under `~/.pai/MEMORY/LEARNING/` (previously missing).
 - Skill-level mechanical ports: [`skills/PORTING_NOTES.md`](skills/PORTING_NOTES.md)
 - Research skill specifics: [`skills/Research/PORTING_NOTES.md`](skills/Research/PORTING_NOTES.md)
 - Remaining divergences / backlog: `~/.pai/MEMORY/WORK/active.md` (Queued sections), Copilot Environment Security & Efficiency Audit Phase 2 scope.
+
+---
+
+## Tier 3 port — 2026-04-23
+
+**Fallback tag:** `pre-tier3-port-20260423T1119Z`
+**Branch:** `feat/copilot-migration`
+**Scope:** runtime glue (sidecar POST), SecretScan utility, PRD backfill,
+phantom-PAI-root cleanup, comprehensive inventory below.
+
+### Copilot/sidecar/pai-copilot — POST-session additions
+Added two non-fatal post-session functions:
+- `weekly_synthesis()` — ISO-week-gated run of `synthesize-learnings.sh`. Stamp file at `~/.pai/state/last-synthesis.stamp`. Output to `~/.pai/logs/synthesis.log`. Replaces upstream `LearningPatternSynthesis.hook.ts` (cron-style, SessionEnd). Substitutes a scheduled-run pattern for the missing hook API.
+- `integrity_scan()` — regression guard. Greps `~/.pai/skills/` for phantom `~/.pai/PAI/{SKILL.md,Tools/,Prompting.md}` refs and logs the count to `~/.pai/logs/integrity.log`. Keeps Tier 3 phantom-cleanup from regressing.
+
+### Copilot/tools/secret-scan.sh — New
+Pure-shell port of `PAI/Tools/SecretScan.ts` semantics. Detects AWS AKID/secret, GitHub PAT/OAuth tokens, private key blocks, Slack tokens, Google API keys, bearer tokens, high-entropy `*SECRET*=...` env assignments. Flags: `--staged` (scan git-staged files), `--quiet` (exit-code only). Exit 1 on hit, 0 otherwise. Usable as pre-commit.
+
+### Copilot/tools/backfill-prd-frontmatter.sh — New
+Idempotent backfill of upstream PRDFORMAT v2.0 frontmatter onto `MEMORY/WORK/<slug>/*.md` that predate `new-prd.sh` (Tier 2). Skips files already containing `task:` in first 10 lines. Derives `started:` from the slug's `YYYYMMDDTHHMMSSZ` prefix, falls back to file mtime. Sets `phase: complete`, `progress: 1/1`, `backfilled: true`. Dry-run by default; `--apply` to write. **Applied once** against 6 pre-existing WORK dirs — all now carry frontmatter.
+
+### Phantom-PAI-root cleanup
+14 skill files rewritten to remove references to upstream paths that Tier 1 deliberately skipped:
+- `~/.pai/PAI/SKILL.md` → `~/.copilot/copilot-instructions.md` (the Copilot source of truth)
+- `bun ~/.pai/PAI/Tools/<Tool>.ts` → same command **with inline banner comment** `# NOT PORTED in Copilot (upstream bun tool; see Copilot/PORTING_NOTES.md)` — keeps reader informed without silently breaking copy-paste intent.
+- `~/.pai/PAI/Prompting.md` → `~/.pai/skills/Prompting/README.md`
+
+Files rewritten (repo + rsync'd to `~/.pai/skills/`):
+Research/Workflows/{ExtractAlpha,Fabric,Retrieve,WebScraping,YoutubeExtraction}.md, PAIUpgrade/Workflows/Upgrade.md, Prompting/Templates/README.md, Security/WebAssessment/Workflows/{ffuf/FfufGuide,webapp/TestingGuide}.md, Documents/{SKILL,Pdf/SKILL}.md, Media/Art/Workflows/{Essay,Mermaid,Visualize}.md.
+
+Intentionally **not** rewritten: `skills/PORTING_NOTES.md` line 54 (documents the phantom ref as a known divergence — that's its job).
+
+### Runtime sync (Tier 3)
+- `rsync -a Copilot/skills/ ~/.pai/skills/` — 14 cleanup-rewritten files pushed.
+- `Copilot/tools/secret-scan.sh` → `~/.pai/tools/secret-scan.sh` (+x)
+- `Copilot/tools/backfill-prd-frontmatter.sh` → `~/.pai/tools/backfill-prd-frontmatter.sh` (+x)
+- `Copilot/sidecar/pai-copilot` → `~/.pai/sidecar/pai-copilot` (+x) — POST additions live on next session.
+
+---
+
+## Complete upstream v4.0.3 inventory (canonical reference)
+
+> **Intent:** a future porter reading only this table should be able to
+> reproduce the current port. Columns: upstream path, Copilot status,
+> Copilot path, rationale. Status legend:
+> ✅ ported | ⚠️ partial | 🕒 deferred (Tier 3b) | ⏭ skipped-by-design.
+
+### Top level `.claude/*`
+
+| Upstream path | Status | Copilot path | Reason |
+|---|---|---|---|
+| `CLAUDE.md` | ⏭ | — | Replaced by `.github/copilot-instructions.md` + `~/.copilot/copilot-instructions.md`. |
+| `CLAUDE.md.template` | ⏭ | — | Same reason. |
+| `install.sh` | ⏭ | `Copilot/install.sh` (new) | Copilot port uses its own installer. |
+| `settings.json` | ⏭ | — | Claude Code JSON-schema format. Hook registrations, permissions, MCP config don't apply. |
+| `statusline-command.sh` (1390 lines) | 🕒 | — | Claude Code statusline API only. Tmux-overlay equivalent is Tier 3b. |
+| `agents/` (14 `.md` profiles) | ✅ | `Copilot/agents/` | Ported Tier 1. Reference material only — Copilot `task` tool collapses subagent types to `general-purpose`/`explore`. |
+| `PAI/` | mixed | `Copilot/PAI/` (subnamespace) | See sub-rows below. |
+
+### `.claude/PAI/*` documentation + subdirs
+
+| Upstream path | Status | Copilot path | Reason |
+|---|---|---|---|
+| `PAI/ACTIONS.md` | ✅ | `Copilot/PAI/ACTIONS.md` | Tier 1. |
+| `PAI/AISTEERINGRULES.md` | ✅ | `Copilot/PAI/AISTEERINGRULES.md` | Tier 1. |
+| `PAI/CLI.md` | ✅ | `Copilot/PAI/CLI.md` | Tier 1. |
+| `PAI/CLIFIRSTARCHITECTURE.md` | ✅ | `Copilot/PAI/CLIFIRSTARCHITECTURE.md` | Tier 1. |
+| `PAI/CONTEXT_ROUTING.md` | ✅ | `Copilot/PAI/CONTEXT_ROUTING.md` | Tier 1. |
+| `PAI/DOCUMENTATIONINDEX.md` | ✅ | `Copilot/PAI/DOCUMENTATIONINDEX.md` | Tier 1. |
+| `PAI/doc-dependencies.json` | ⏭ | — | Consumed only by upstream `DocIntegrity.hook.ts`; not actionable without hook API. |
+| `PAI/FLOWS.md` | ✅ | `Copilot/PAI/FLOWS.md` | Tier 1. |
+| `PAI/MEMORYSYSTEM.md` | ✅ | `Copilot/PAI/MEMORYSYSTEM.md` | Tier 1. |
+| `PAI/PAIAGENTSYSTEM.md` | ✅ | `Copilot/PAI/PAIAGENTSYSTEM.md` | Tier 1. |
+| `PAI/PAISYSTEMARCHITECTURE.md` | ✅ | `Copilot/PAI/PAISYSTEMARCHITECTURE.md` | Tier 1. |
+| `PAI/PIPELINES.md` | ✅ | `Copilot/PAI/PIPELINES.md` | Tier 1. |
+| `PAI/PRDFORMAT.md` | ✅ | `Copilot/PAI/PRDFORMAT.md` | Tier 1 (frontmatter spec used by `new-prd.sh`). |
+| `PAI/README.md` | ⏭ | — | Copilot has `Copilot/README.md`; upstream version duplicates. |
+| `PAI/SKILL.md` | ⏭ | — | Copilot source of truth is `copilot-instructions.md`. |
+| `PAI/SKILLSYSTEM.md` | ✅ | `Copilot/PAI/SKILLSYSTEM.md` | Tier 1. |
+| `PAI/SYSTEM_USER_EXTENDABILITY.md` | ✅ | `Copilot/PAI/SYSTEM_USER_EXTENDABILITY.md` | Tier 1. |
+| `PAI/THEDELEGATIONSYSTEM.md` | ✅ | `Copilot/PAI/THEDELEGATIONSYSTEM.md` | Tier 1. |
+| `PAI/THEFABRICSYSTEM.md` | ✅ | `Copilot/PAI/THEFABRICSYSTEM.md` | Tier 1. |
+| `PAI/THEHOOKSYSTEM.md` | ✅ | `Copilot/PAI/THEHOOKSYSTEM.md` | Tier 1 (docs only — hook runtime not ported). |
+| `PAI/THENOTIFICATIONSYSTEM.md` | ✅ | `Copilot/PAI/THENOTIFICATIONSYSTEM.md` | Tier 1. |
+| `PAI/TOOLS.md` | ✅ | `Copilot/PAI/TOOLS.md` | Tier 1. |
+| `PAI/ACTIONS/README.md` | ✅ | `Copilot/PAI/ACTIONS/README.md` | Tier 1. |
+| `PAI/ACTIONS/A_EXAMPLE_*` (json+ts) | 🕒 | — | Requires bun runtime; ACTIONS execution engine is Tier 3b. |
+| `PAI/ACTIONS/lib/*.ts` (runner.ts, pipeline-runner.ts, types.ts) | 🕒 | — | Same. |
+| `PAI/FLOWS/README.md` | ✅ | `Copilot/PAI/FLOWS/README.md` | Tier 1. |
+| `PAI/PIPELINES/README.md` | ✅ | `Copilot/PAI/PIPELINES/README.md` | Tier 1. |
+| `PAI/PIPELINES/P_EXAMPLE_SUMMARIZE_AND_FORMAT.yaml` | 🕒 | — | Requires pipeline runner (Tier 3b). |
+| `PAI/Algorithm/v3.5.0.md` | ✅ | `Copilot/PAI/Algorithm/v3.5.0.md` | Tier 1. |
+| `PAI/Algorithm/v3.7.0.md` | ✅ | `Copilot/PAI/Algorithm/v3.7.0.md` | Tier 1 (current). |
+| `PAI/Algorithm/LATEST` (pointer `v3.7.0`) | ⏭ | — | Trivially reconstructable; not ported. |
+
+### `.claude/PAI/USER/*` scaffolds (Tier 2)
+
+| Upstream path | Status | Copilot path | Reason |
+|---|---|---|---|
+| `PAI/USER/README.md` | ✅ (replaced) | `Copilot/PAI/USER/README.md` | Copilot-authored overview mapping to actual `~/.pai/USER/` layout. |
+| `PAI/USER/ACTIONS/README.md` | ✅ | `Copilot/PAI/USER/ACTIONS/README.md` | Tier 2. |
+| `PAI/USER/BUSINESS/README.md` | ✅ | `Copilot/PAI/USER/BUSINESS/README.md` | Tier 2. |
+| `PAI/USER/FLOWS/README.md` | ✅ | `Copilot/PAI/USER/FLOWS/README.md` | Tier 2. |
+| `PAI/USER/PIPELINES/README.md` | ✅ | `Copilot/PAI/USER/PIPELINES/README.md` | Tier 2. |
+| `PAI/USER/PROJECTS/README.md` | ✅ | `Copilot/PAI/USER/PROJECTS/README.md` | Tier 2. |
+| `PAI/USER/SKILLCUSTOMIZATIONS/README.md` | ⏭ (live) | `~/.pai/USER/SKILLCUSTOMIZATIONS/` | Already populated at runtime; don't clobber. |
+| `PAI/USER/STATUSLINE/README.md` | ⚠️ | `Copilot/PAI/USER/STATUSLINE/README.md` | Ported as scaffold; banner flags Copilot CLI has no statusline API. |
+| `PAI/USER/TELOS/README.md` | ⏭ (live) | `~/.pai/USER/TELOS/` | Populated; don't clobber. |
+| `PAI/USER/TERMINAL/README.md` | ✅ | `Copilot/PAI/USER/TERMINAL/README.md` | Tier 2. |
+| `PAI/USER/WORK/README.md` | ✅ | `Copilot/PAI/USER/WORK/README.md` | Tier 2. |
+| `PAI/USER/Workflows/README.md` | ✅ | `Copilot/PAI/USER/Workflows/README.md` | Tier 2. |
+
+### `.claude/PAI/Tools/*.ts` — Bun TypeScript utilities
+
+| Upstream file | Status | Copilot equivalent | Reason |
+|---|---|---|---|
+| `ActivityParser.ts` | 🕒 | — | Activity-log parser; niche, defer. |
+| `AddBg.ts`, `RemoveBg.ts` | 🕒 | — | Image background tools; in-scope under `Media` skill if demand surfaces. |
+| `algorithm.ts` | 🕒 | — | Upstream Algorithm runner; Copilot runs Algorithm via `copilot-instructions.md` rules. |
+| `AlgorithmPhaseReport.ts` | 🕒 | — | Phase reporter; not wired in Copilot. |
+| `Banner.ts`, `BannerMatrix.ts`, `BannerNeofetch.ts`, `BannerPrototypes.ts`, `BannerRetro.ts`, `BannerTokyo.ts`, `NeofetchBanner.ts`, `PAILogo.ts` | ⏭ | — | Terminal ASCII-art cosmetics. Skipped by design. |
+| `BuildCLAUDE.ts` | ⏭ | — | Rebuilds `CLAUDE.md` from template; Copilot has its own instructions system. |
+| `extract-transcript.py`, `ExtractTranscript.ts`, `GetTranscript.ts`, `TranscriptParser.ts` | 🕒 | — | YouTube/transcript pipeline; in-scope if `Media`/`Research` skills need it. |
+| `FailureCapture.ts` | 🕒 | `capture-rating.sh` (partial) | Copilot capture-rating writes a failure shell on ratings ≤3, but doesn't dump tool-call context (needs hook API). |
+| `FeatureRegistry.ts` | 🕒 | — | Skill feature enumeration; not wired. |
+| `GetCounts.ts`, `UpdateCounts.ts` (hook) | 🕒 | — | Document count maintenance. |
+| `Inference.ts` | ⏭ | Copilot model system | Redundant — Copilot CLI exposes models natively. |
+| `IntegrityMaintenance.ts` | ⚠️ | `pai-copilot post_session_tier3 > integrity_scan()` (Tier 3) | Sidecar does a lightweight regression scan; full upstream scope (doc-dependencies.json enforcement) is Tier 3b. |
+| `LearningPatternSynthesis.ts` | ✅ (via shell) | `Copilot/tools/synthesize-learnings.{sh,ts}` wired into sidecar POST (Tier 3) | Weekly run gated by stamp file. |
+| `LoadSkillConfig.ts` | 🕒 | — | Used by PAIUpgrade workflow; banner-flagged at phantom-cleanup. |
+| `OpinionTracker.ts` | 🕒 | — | Niche. |
+| `pai.ts`, `PreviewMarkdown.ts`, `pipeline-monitor-ui`, `PipelineMonitor.ts`, `PipelineOrchestrator.ts` | 🕒 | — | Pipeline runtime family; Tier 3b. |
+| `RebuildPAI.ts` | ⏭ | — | Claude-Code-specific installer side. |
+| `RelationshipReflect.ts` | ⚠️ | `~/.pai/MEMORY/RELATIONSHIP/` append rules in instructions | AI-handled, not a tool. |
+| `SecretScan.ts` | ✅ (via shell) | `Copilot/tools/secret-scan.sh` (Tier 3) | Pure-shell port. |
+| `SessionHarvester.ts` | ✅ (equivalent) | `Copilot/tools/harvest-session.sh` | Session-folder harvester written for Copilot session format. |
+| `SessionProgress.ts` | 🕒 | — | Hook-dependent. |
+| `SplitAndTranscribe.ts` | 🕒 | — | Audio tooling; niche. |
+| `WisdomCrossFrameSynthesizer.ts`, `WisdomDomainClassifier.ts`, `WisdomFrameUpdater.ts` | 🕒 | — | TELOS wisdom-aggregation triad; requires Inference.ts. Tier 3b if wired. |
+| `YouTubeApi.ts` | 🕒 | — | Used by YouTube extraction workflow (phantom-cleaned in Tier 3). |
+
+### `.claude/hooks/` — Hook handlers (from `settings.json`)
+
+Upstream registers 22 handlers across 6 groups. Copilot CLI has **no hook API**. Approximations where possible; most are fundamentally unportable per-tool-call.
+
+| Group / matcher | Upstream handler | Copilot equivalent | Rationale |
+|---|---|---|---|
+| PreToolUse/Bash,Edit,Write,Read | `SecurityValidator.hook.ts` | `copilot-instructions.md § Security Rules` | Instruction-based refusal rules; no runtime filter. |
+| PreToolUse/AskUserQuestion | `SetQuestionTab.hook.ts` | — | Tab title is sidecar PRE only. |
+| PreToolUse/Task | `AgentExecutionGuard.hook.ts` | — | Unportable without hook API. |
+| PreToolUse/Skill | `SkillGuard.hook.ts` | — | Same. |
+| PostToolUse/AskUserQuestion | `QuestionAnswered.hook.ts` | — | Same. |
+| PostToolUse/Write,Edit | `PRDSync.hook.ts` | Instructions: AI bumps `updated:` when editing PRD | No auto-sync; discipline-based. |
+| SessionEnd | `WorkCompletionLearning.hook.ts` | `capture-work-learning.sh` (AI-invoked) | Ported as manual tool. |
+| SessionEnd | `SessionCleanup.hook.ts` | `pai-copilot post_session > cleanup_stale_state` | Ported. |
+| SessionEnd | `RelationshipMemory.hook.ts` | Instructions: `§ Relationship Memory` (AI-handled) | Best-effort capture at shutdown. |
+| SessionEnd | `UpdateCounts.hook.ts` | — | Skipped; cosmetic. |
+| SessionEnd | `IntegrityCheck.hook.ts` | `pai-copilot post_session_tier3 > integrity_scan` (Tier 3) | Regression guard only; narrower than upstream. |
+| UserPromptSubmit | `RatingCapture.hook.ts` | `capture-rating.sh` + instructions § Rating Capture | AI fires on `\d/10` patterns. |
+| UserPromptSubmit | `UpdateTabTitle.hook.ts` | Sidecar PRE sets tab title once | Per-prompt update is unportable. |
+| UserPromptSubmit | `SessionAutoName.hook.ts` | — | Skipped. |
+| SessionStart | `KittyEnvPersist.hook.ts` | — | Skipped. |
+| SessionStart | `LoadContext.hook.ts` | Instructions: § Session Startup | AI loads startup-digest.md + ABOUTME + DAIDENTITY. |
+| SessionStart | `bun BuildCLAUDE.ts` | — | Skipped (Copilot instructions system). |
+| Stop | `LastResponseCache.hook.ts` | — | Skipped. |
+| Stop | `ResponseTabReset.hook.ts` | Sidecar POST resets title | Approximation only. |
+| Stop | `VoiceCompletion.hook.ts` | Instructions: voice curl at end of non-MINIMAL responses | AI-fired. |
+| Stop | `DocIntegrity.hook.ts` | `pai-copilot integrity_scan` (Tier 3) | Regression guard only. |
+| SessionStart | `PRDGenerate.hook.ts` (not in settings above — upstream separately hooks this) | `Copilot/tools/new-prd.sh` (Tier 2) | Tool-based replacement. |
+
+### Runtime state + memory
+
+| Upstream artifact | Status | Copilot artifact |
+|---|---|---|
+| `~/.claude/MEMORY/` tree | ✅ | `~/.pai/MEMORY/` |
+| `MEMORY/LEARNING/ALGORITHM/`, `SYSTEM/` | ✅ | Ported; `capture-work-learning.sh` writes here. |
+| `MEMORY/LEARNING/FAILURES/` | ✅ | Present; populated by `capture-rating.sh` on low ratings. |
+| `MEMORY/LEARNING/SIGNALS/` | ✅ | Present; `capture-rating.sh` writes jsonl. |
+| `MEMORY/LEARNING/SYNTHESIS/` | ✅ | Tier 2 scaffolded; Tier 3 wires weekly run. |
+| `MEMORY/LEARNING/REFLECTIONS/algorithm-reflections.jsonl` | ✅ | Tier 2 added; `capture-work-learning.sh --reflection` appends. |
+| `MEMORY/RELATIONSHIP/` | ✅ | AI-handled per instructions. |
+| `MEMORY/RESEARCH/` | ✅ | `save-research-memory.sh` is the single writer. |
+| `MEMORY/WORK/<slug>/PRD.md` | ✅ | `new-prd.sh` scaffolds; `backfill-prd-frontmatter.sh` retrofits. |
+| `MEMORY/WORK/active.md` | ✅ | Hand-curated; overwritten on ALGORITHM start and shutdown. |
+| `MEMORY/WORK/projects/` engagement | ✅ (Copilot-native) | Sidecar PRE `capture_engagement()`; not upstream. |
+| `state/sessions.log` | ✅ | Sidecar writes. |
+
+### Explicitly NOT ported (Tier 3b deferred)
+
+| Item | Reason |
+|---|---|
+| Per-tool-call hooks (SecurityValidator live filter, PRDSync auto-bump, AgentExecutionGuard, SkillGuard, SetQuestionTab, QuestionAnswered) | Copilot CLI has no hook API. Approximation via instructions only. |
+| `statusline-command.sh` (1390 lines) | Claude Code statusline API. Tmux-overlay equivalent is Tier 3b. |
+| ACTIONS/PIPELINES runtime (`lib/runner.ts`, `pipeline-runner.ts`, example actions/pipelines) | Requires bun. Major new feature; defer until concrete use case. |
+| `Inference.ts` unified wrapper | Copilot CLI has its own model system. |
+| Banner/neofetch/PAILogo TS | Cosmetic. |
+| Wisdom*.ts triad (CrossFrame, Domain, Frame) | Depends on Inference.ts. |
+| Pipeline monitor UI | Depends on runtime. |
+| Remaining `PAI/Tools/*.ts` not cited above | Port individually if a skill/workflow demands it. |
+
+### Procedure to re-run this port from scratch
+
+1. Pin upstream: `git clone --depth 1 https://github.com/danielmiessler/PAI /tmp/pai-upstream` (release folder `Releases/v4.0.3/.claude/`).
+2. Cut fallback tag: `git tag pre-port-<UTC> && git push origin --tags`.
+3. **Tier 1**: mechanical port of `.claude/PAI/*.md` + `.claude/PAI/{ACTIONS,FLOWS,PIPELINES,Algorithm}/README.md|*.md` + `.claude/agents/*.md` into `Copilot/PAI/` and `Copilot/agents/`. Apply substitution table at top of this file. Add upstream banner to each ported file. Skip: `CLAUDE.md`, `settings.json`, `install.sh`, `statusline-command.sh`, `PAI/README.md`, `PAI/SKILL.md`, `PAI/Tools/`, `PAI/USER/` (defer to Tier 2).
+4. **Tier 2**: port `.claude/PAI/USER/*/README.md` to `Copilot/PAI/USER/`. Skip `TELOS/` and `SKILLCUSTOMIZATIONS/` if live content already exists under `~/.pai/USER/`. Add `Copilot/tools/new-prd.sh` implementing upstream PRDFORMAT v2.0 frontmatter. Create `Copilot/PAI/MEMORY/LEARNING/{SYNTHESIS,REFLECTIONS}/README.md`. Extend `capture-work-learning.sh` with `--reflection`.
+5. **Tier 3**: extend sidecar POST (weekly synthesis + integrity scan). Port `SecretScan` as shell. Add `backfill-prd-frontmatter.sh`. Rewrite phantom-PAI-root refs using canonical map:
+   - `~/.pai/PAI/SKILL.md` → `~/.copilot/copilot-instructions.md`
+   - `bun ~/.pai/PAI/Tools/X.ts` → append ` # NOT PORTED in Copilot (upstream bun tool; see Copilot/PORTING_NOTES.md)`
+   - `~/.pai/PAI/Prompting.md` → `~/.pai/skills/Prompting/README.md`
+6. After each tier: rsync `Copilot/PAI/`, `Copilot/agents/`, `Copilot/skills/` into `~/.pai/*`; copy updated `Copilot/tools/*.sh` into `~/.pai/tools/`; copy `Copilot/sidecar/pai-copilot` into `~/.pai/sidecar/pai-copilot`. Never run upstream's `install.sh` — it clobbers live state.
+7. Update this file with any new divergences discovered.
