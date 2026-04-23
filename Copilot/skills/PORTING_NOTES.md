@@ -1,5 +1,7 @@
 # Skill Ports — mechanical migration notes
 
+> **See also:** [`../PORTING_NOTES.md`](../PORTING_NOTES.md) at the `Copilot/` root for **platform-level** ports (SYSTEM docs, agents, state tree, sidecar, voice server). This file covers **skill-level** mechanical ports only.
+
 This file documents the batch port of 6 upstream skill packs to the Copilot
 CLI spike: **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**,
 **USMetrics**, **Security**.
