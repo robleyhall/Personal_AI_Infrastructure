@@ -134,36 +134,80 @@ Runtime dirs created under `~/.pai/MEMORY/LEARNING/` (previously missing).
 
 **Fallback tag:** `pre-tier3-port-20260423T1119Z`
 **Branch:** `feat/copilot-migration`
-**Scope:** runtime glue (sidecar POST), SecretScan utility, PRD backfill,
-phantom-PAI-root cleanup, comprehensive inventory below.
+**Scope:** runtime glue (sidecar POST), phantom-PAI-root cleanup,
+PRD backfill utility, comprehensive inventory below.
+**Superseded in part by Tier 3+ (same session, below):** `bun` was
+unexpectedly available; Tier 3's shell-ports of upstream bun tools were
+reverted in favor of running the upstream `.ts` directly.
 
 ### Copilot/sidecar/pai-copilot — POST-session additions
-Added two non-fatal post-session functions:
-- `weekly_synthesis()` — ISO-week-gated run of `synthesize-learnings.sh`. Stamp file at `~/.pai/state/last-synthesis.stamp`. Output to `~/.pai/logs/synthesis.log`. Replaces upstream `LearningPatternSynthesis.hook.ts` (cron-style, SessionEnd). Substitutes a scheduled-run pattern for the missing hook API.
-- `integrity_scan()` — regression guard. Greps `~/.pai/skills/` for phantom `~/.pai/PAI/{SKILL.md,Tools/,Prompting.md}` refs and logs the count to `~/.pai/logs/integrity.log`. Keeps Tier 3 phantom-cleanup from regressing.
-
-### Copilot/tools/secret-scan.sh — New
-Pure-shell port of `PAI/Tools/SecretScan.ts` semantics. Detects AWS AKID/secret, GitHub PAT/OAuth tokens, private key blocks, Slack tokens, Google API keys, bearer tokens, high-entropy `*SECRET*=...` env assignments. Flags: `--staged` (scan git-staged files), `--quiet` (exit-code only). Exit 1 on hit, 0 otherwise. Usable as pre-commit.
+Added three non-fatal post-session functions:
+- `weekly_synthesis()` — ISO-week-gated `bun ~/.pai/PAI/Tools/LearningPatternSynthesis.ts --week`. Stamp file at `~/.pai/state/last-synthesis.stamp`. Output to `~/.pai/logs/synthesis.log`. Replaces upstream `LearningPatternSynthesis.hook.ts` (cron-style, SessionEnd) since Copilot has no hook API.
+- `integrity_scan()` — regression guard. Greps `~/.pai/skills/` for phantom `~/.pai/PAI/{SKILL.md,Tools/,Prompting.md}` refs and logs the count to `~/.pai/logs/integrity.log`.
+- `prd_sync()` — approximates upstream `PRDSync.hook.ts` (PostToolUse/Write+Edit). At session end, bumps `updated:` frontmatter on every `MEMORY/WORK/**/*.md` touched since session start (tracked via `session-<id>.started` touch file). Only touches PRDFORMAT v2.0 files (has both `task:` and `updated:` in first 12 lines).
 
 ### Copilot/tools/backfill-prd-frontmatter.sh — New
-Idempotent backfill of upstream PRDFORMAT v2.0 frontmatter onto `MEMORY/WORK/<slug>/*.md` that predate `new-prd.sh` (Tier 2). Skips files already containing `task:` in first 10 lines. Derives `started:` from the slug's `YYYYMMDDTHHMMSSZ` prefix, falls back to file mtime. Sets `phase: complete`, `progress: 1/1`, `backfilled: true`. Dry-run by default; `--apply` to write. **Applied once** against 6 pre-existing WORK dirs — all now carry frontmatter.
+Idempotent backfill of PRDFORMAT v2.0 frontmatter onto `MEMORY/WORK/<slug>/*.md` that predate the scaffolder. Skips files already containing `task:` in first 10 lines. Derives `started:` from the slug's `YYYYMMDDTHHMMSSZ` prefix, falls back to file mtime. Sets `phase: complete`, `progress: 1/1`, `backfilled: true`. Dry-run by default; `--apply` to write. **Applied once** against 6 pre-existing WORK dirs.
+
+### Copilot/tools/capture-rating.sh — FailureCapture extension
+Low-rating (≤3) path now appends a "Recent Session Context" block with the last ~20 events (`user.message`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`) parsed from the active Copilot session's `~/.copilot/session-state/<uuid>/events.jsonl`. Approximates upstream `FailureCapture.ts` context dump. Events file located by scanning most-recently-modified session dirs; uses Python for JSON parsing.
 
 ### Phantom-PAI-root cleanup
-14 skill files rewritten to remove references to upstream paths that Tier 1 deliberately skipped:
-- `~/.pai/PAI/SKILL.md` → `~/.copilot/copilot-instructions.md` (the Copilot source of truth)
-- `bun ~/.pai/PAI/Tools/<Tool>.ts` → same command **with inline banner comment** `# NOT PORTED in Copilot (upstream bun tool; see Copilot/PORTING_NOTES.md)` — keeps reader informed without silently breaking copy-paste intent.
+14 skill files rewritten:
+- `~/.pai/PAI/SKILL.md` → `~/.copilot/copilot-instructions.md`
 - `~/.pai/PAI/Prompting.md` → `~/.pai/skills/Prompting/README.md`
+- `bun ~/.pai/PAI/Tools/<X>.ts` — originally tagged with a "NOT PORTED" inline banner. **Reverted in Tier 3+ once bun availability was confirmed.**
 
-Files rewritten (repo + rsync'd to `~/.pai/skills/`):
-Research/Workflows/{ExtractAlpha,Fabric,Retrieve,WebScraping,YoutubeExtraction}.md, PAIUpgrade/Workflows/Upgrade.md, Prompting/Templates/README.md, Security/WebAssessment/Workflows/{ffuf/FfufGuide,webapp/TestingGuide}.md, Documents/{SKILL,Pdf/SKILL}.md, Media/Art/Workflows/{Essay,Mermaid,Visualize}.md.
+Intentionally **not** rewritten: `skills/PORTING_NOTES.md` line documenting phantom-ref is the doc.
 
-Intentionally **not** rewritten: `skills/PORTING_NOTES.md` line 54 (documents the phantom ref as a known divergence — that's its job).
+---
 
-### Runtime sync (Tier 3)
-- `rsync -a Copilot/skills/ ~/.pai/skills/` — 14 cleanup-rewritten files pushed.
-- `Copilot/tools/secret-scan.sh` → `~/.pai/tools/secret-scan.sh` (+x)
-- `Copilot/tools/backfill-prd-frontmatter.sh` → `~/.pai/tools/backfill-prd-frontmatter.sh` (+x)
-- `Copilot/sidecar/pai-copilot` → `~/.pai/sidecar/pai-copilot` (+x) — POST additions live on next session.
+## Tier 3+ expansion — 2026-04-23 (same session)
+
+**Discovery:** `bun 1.3.12` was already installed system-wide. Earlier
+tiers had assumed it was not available and either deferred bun tools or
+reimplemented them in shell. All such ports are now reverted to running
+the upstream `.ts` directly.
+
+### What's newly available
+- **`Copilot/PAI/Tools/`** — 37 TypeScript tools + 1 Python (`extract-transcript.py`) copied from upstream v4.0.3 `PAI/Tools/`. Paths rewritten `.claude`→`.pai`. Each file prepended with a single-line "Ported from upstream … Run with bun." banner. All 37 pass `bun build --target=bun` (parse check).
+- **`Copilot/PAI/ACTIONS/lib/`** — 5 TS files (`runner.ts`, `runner.v2.ts`, `pipeline-runner.ts`, `types.ts`, `types.v2.ts`) ported verbatim. Usage: `bun lib/runner.ts <action.json>`.
+- **`Copilot/PAI/ACTIONS/`** example actions, **`Copilot/PAI/PIPELINES/P_EXAMPLE_*.yaml`**.
+- **`Copilot/PAI/Tools/pipeline-monitor-ui/`** — React+Vite UI copied as-is.
+- **`Copilot/hooks/lib/`** — minimal stubs for `identity.ts`, `learning-utils.ts`, `prd-template.ts`. Upstream v4.0.3 **release tree does not ship** these libs, yet 5 tools (`algorithm.ts`, `pai.ts`, `SessionHarvester.ts`, `TranscriptParser.ts`, `IntegrityMaintenance.ts`) import from `../../hooks/lib/*`. Without stubs the tools fail to resolve at import time. Stubs match the shapes expected at call sites and read from `~/.pai/USER/`.
+- **`Copilot/tools/statusline-command.sh`** — upstream's 1390-line statusline script ported with a banner. Copilot CLI has no statusline API; script is usable from tmux `status-right` or manually piping a Claude-Code-shaped session JSON.
+
+### npm dependencies needed
+- `Copilot/PAI/Tools/package.json` — `openai`, `yaml` (required by `ExtractTranscript.ts`, `SplitAndTranscribe.ts`, `LoadSkillConfig.ts`, `PipelineOrchestrator.ts`).
+- `Copilot/PAI/ACTIONS/package.json` — `glob`, `yaml`, `zod`, `ajv`, `ajv-formats` (required by `runner.v2.ts`, `pipeline-runner.ts`).
+- Install: `cd ~/.pai/PAI/Tools && bun install && cd ~/.pai/PAI/ACTIONS && bun install`.
+- `node_modules/` and `bun.lock` are gitignored; only `package.json` is committed.
+
+### What was reverted
+- **Deleted `Copilot/tools/secret-scan.sh`.** Shell port of upstream `SecretScan.ts`. Direct bun invocation supersedes: `bun ~/.pai/PAI/Tools/SecretScan.ts <path>`.
+- **Deleted `Copilot/tools/synthesize-learnings.{sh,ts}`.** Shell wrapper + local `.ts` copy of upstream `LearningPatternSynthesis.ts`. Sidecar `weekly_synthesis()` now calls `bun ~/.pai/PAI/Tools/LearningPatternSynthesis.ts --week`.
+- **Deleted `Copilot/tools/new-prd.sh`.** Upstream `algorithm.ts new -t <title>` produces identical PRDFORMAT v2.0 output. Callers: `bun ~/.pai/PAI/Tools/algorithm.ts new -t "..." [-e Extended]`.
+- **Reverted phantom-cleanup inline banners** from 4 skill files (PAIUpgrade, Media/Art Essay/Visualize/Mermaid). The `bun ~/.pai/PAI/Tools/<X>.ts` lines are now correct command invocations.
+
+### What's kept as Copilot-native (not reverted)
+- `capture-rating.sh` / `capture-work-learning.sh` / `save-research-memory.sh` — AI-invoked; upstream equivalents are **hook-bound** (`RatingCapture.hook.ts`, `WorkCompletionLearning.hook.ts`). Since Copilot has no hook API, the AI-invoked pattern is necessary.
+- `harvest-session.sh` — upstream `SessionHarvester.ts` reads Claude transcript format; Copilot session store uses a different JSONL schema (`~/.copilot/session-state/<uuid>/events.jsonl`). Distinct implementation required.
+- `backfill-prd-frontmatter.sh`, `engagement-distill.sh`, `learning-readback.sh` — no upstream equivalent.
+
+### Functional gaps closed by Tier 3+
+| Previously partial / deferred | Now ported |
+|---|---|
+| ~25 `PAI/Tools/*.ts` deferred | 37 TS + 1 py runnable via bun |
+| ACTIONS/PIPELINES runtime deferred | `runner.ts`, `pipeline-runner.ts` compile |
+| `statusline-command.sh` deferred | Ported (for tmux/manual use) |
+| PRDSync auto-bump missing | `prd_sync()` in sidecar POST |
+| FailureCapture context dump missing | `capture-rating.sh` low-rating path enriched |
+
+### Remaining gaps (still unportable or explicitly skipped)
+- **Per-tool-call hooks** — Copilot CLI has no hook API. `SecurityValidator`, `AgentExecutionGuard`, `SkillGuard`, `SetQuestionTab`, `QuestionAnswered`, `UpdateTabTitle` cannot fire mid-session; only AI-discipline approximations exist.
+- **Banner/PAILogo/neofetch** TS — cosmetic, skipped by design.
+- **`BuildCLAUDE.ts`, `RebuildPAI.ts`** — Claude-Code installer-side, skipped.
+- **`Inference.ts`** — Copilot CLI has its own model system; upstream's unified wrapper is redundant. Note: `FailureCapture.ts` and `IntegrityMaintenance.ts` upstream import `./Inference`; they compile (import is evaluated lazily) but will fail at runtime if those code paths are exercised. If needed, write a shim that delegates to `gh models run`.
 
 ---
 
@@ -241,6 +285,9 @@ Intentionally **not** rewritten: `skills/PORTING_NOTES.md` line 54 (documents th
 
 ### `.claude/PAI/Tools/*.ts` — Bun TypeScript utilities
 
+> **Tier 3+ update (2026-04-23):** All non-cosmetic tools below listed as 🕒 have been ported verbatim to `Copilot/PAI/Tools/` and run under `bun`. Status-column "🕒" annotations predate Tier 3+; treat them as **✅ (bun)** unless the row is marked as skipped (Banner/cosmetic, BuildCLAUDE, RebuildPAI, Inference). Install deps: `cd ~/.pai/PAI/Tools && bun install`.
+
+
 | Upstream file | Status | Copilot equivalent | Reason |
 |---|---|---|---|
 | `ActivityParser.ts` | 🕒 | — | Activity-log parser; niche, defer. |
@@ -255,13 +302,13 @@ Intentionally **not** rewritten: `skills/PORTING_NOTES.md` line 54 (documents th
 | `GetCounts.ts`, `UpdateCounts.ts` (hook) | 🕒 | — | Document count maintenance. |
 | `Inference.ts` | ⏭ | Copilot model system | Redundant — Copilot CLI exposes models natively. |
 | `IntegrityMaintenance.ts` | ⚠️ | `pai-copilot post_session_tier3 > integrity_scan()` (Tier 3) | Sidecar does a lightweight regression scan; full upstream scope (doc-dependencies.json enforcement) is Tier 3b. |
-| `LearningPatternSynthesis.ts` | ✅ (via shell) | `Copilot/tools/synthesize-learnings.{sh,ts}` wired into sidecar POST (Tier 3) | Weekly run gated by stamp file. |
+| `LearningPatternSynthesis.ts` | ✅ (bun) | `Copilot/PAI/Tools/LearningPatternSynthesis.ts`; sidecar calls it | Tier 3+ revert. Weekly stamp-gated run from sidecar POST. |
 | `LoadSkillConfig.ts` | 🕒 | — | Used by PAIUpgrade workflow; banner-flagged at phantom-cleanup. |
 | `OpinionTracker.ts` | 🕒 | — | Niche. |
 | `pai.ts`, `PreviewMarkdown.ts`, `pipeline-monitor-ui`, `PipelineMonitor.ts`, `PipelineOrchestrator.ts` | 🕒 | — | Pipeline runtime family; Tier 3b. |
 | `RebuildPAI.ts` | ⏭ | — | Claude-Code-specific installer side. |
 | `RelationshipReflect.ts` | ⚠️ | `~/.pai/MEMORY/RELATIONSHIP/` append rules in instructions | AI-handled, not a tool. |
-| `SecretScan.ts` | ✅ (via shell) | `Copilot/tools/secret-scan.sh` (Tier 3) | Pure-shell port. |
+| `SecretScan.ts` | ✅ (bun) | `Copilot/PAI/Tools/SecretScan.ts` | Tier 3+ revert to upstream bun tool after discovering bun available. |
 | `SessionHarvester.ts` | ✅ (equivalent) | `Copilot/tools/harvest-session.sh` | Session-folder harvester written for Copilot session format. |
 | `SessionProgress.ts` | 🕒 | — | Hook-dependent. |
 | `SplitAndTranscribe.ts` | 🕒 | — | Audio tooling; niche. |
