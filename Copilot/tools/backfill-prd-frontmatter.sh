@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # backfill-prd-frontmatter.sh — Add PRDFORMAT v2.0 frontmatter to existing
-# MEMORY/WORK/<slug>/ docs that predate new-prd.sh (Tier 2).
+# MEMORY/WORK/<slug>/ docs that predate `bun ~/.pai/PAI/Tools/algorithm.ts new` (Tier 2).
 #
 # Idempotent: skips files that already have YAML frontmatter with `task:`.
 #

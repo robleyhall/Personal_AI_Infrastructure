@@ -65,6 +65,72 @@ echo "capture-rating: recorded rating $RATING"
 # Failure capture for low ratings
 if [[ "$RATING" -le 3 ]]; then
   FAILURE_FILE="$FAILURES_DIR/${TIMESTAMP//:/-}_rating${RATING}.md"
+
+  # FailureCapture (upstream FailureCapture.ts): dump last N tool calls +
+  # assistant snippets from the current Copilot session's events.jsonl so the
+  # capture has concrete context, not just summary text.
+  CONTEXT_BLOCK=""
+  EVENTS_FILE=""
+  if [[ -n "${SESSION_ID:-}" && "$SESSION_ID" != "unknown" ]]; then
+    # Copilot session folders are keyed by a UUID; session env var may carry
+    # either the UUID or the sidecar-derived id. Match either by stripping
+    # sidecar prefix and searching.
+    SHORT_ID="${SESSION_ID##*-}"
+    CAND="$(ls -td "$HOME/.copilot/session-state/"*/ 2>/dev/null | head -5)"
+    for d in $CAND; do
+      if [[ -f "$d/events.jsonl" ]]; then
+        EVENTS_FILE="$d/events.jsonl"
+        break
+      fi
+    done
+  fi
+  if [[ -n "$EVENTS_FILE" && -f "$EVENTS_FILE" ]]; then
+    CONTEXT_BLOCK="$(python3 - "$EVENTS_FILE" <<'PY'
+import json, sys
+path = sys.argv[1]
+events = []
+try:
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                events.append(json.loads(line))
+            except Exception:
+                pass
+except Exception:
+    sys.exit(0)
+
+# Keep last 20 notable events
+notable = [e for e in events if e.get('type') in (
+    'user.message', 'assistant.message',
+    'tool.execution_start', 'tool.execution_complete'
+)][-20:]
+
+def fmt(ev):
+    t = ev.get('type', '?')
+    ts = ev.get('timestamp', '')
+    if t == 'user.message':
+        msg = (ev.get('user_content') or '')[:200]
+        return f"- [{ts}] USER: {msg}"
+    if t == 'assistant.message':
+        msg = (ev.get('assistant_content') or '')[:200]
+        return f"- [{ts}] ASSIST: {msg}"
+    if t == 'tool.execution_start':
+        name = ev.get('tool_start_name') or ev.get('name', '?')
+        return f"- [{ts}] TOOL start: {name}"
+    if t == 'tool.execution_complete':
+        name = ev.get('tool_start_name') or ev.get('name', '?')
+        ok = ev.get('tool_complete_success')
+        return f"- [{ts}] TOOL done: {name} success={ok}"
+    return f"- [{ts}] {t}"
+
+print('\n'.join(fmt(e) for e in notable))
+PY
+)"
+  fi
+
   cat > "$FAILURE_FILE" <<EOF
 # Failure Capture — Rating $RATING
 
@@ -80,6 +146,10 @@ ${COMMENT:-_(no comment provided)_}
 ## Response Summary
 
 ${SUMMARY:-_(no summary provided)_}
+
+## Recent Session Context (last ~20 events)
+
+${CONTEXT_BLOCK:-_(events.jsonl not found for this session)_}
 EOF
   echo "capture-rating: failure capture written to $FAILURE_FILE"
 fi
