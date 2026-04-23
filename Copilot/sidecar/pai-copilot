@@ -115,6 +115,7 @@ post_session() {
   echo "$SESSION_ID $(date -u +%s) end $exit_code" >>"$PAI_STATE_DIR/sessions.log"
   set_tab_title "Terminal"
   cleanup_stale_state
+  post_session_tier3
 }
 
 cleanup_stale_state() {
@@ -126,6 +127,58 @@ cleanup_stale_state() {
   find "$PAI_DIR/MEMORY/WORK" -mindepth 1 -type d -empty -delete 2>/dev/null || true
 
   log "cleanup complete"
+}
+
+# weekly_synthesis — run synthesize-learnings once per ISO week.
+# Stamp-file gated; non-fatal. Replaces upstream's cron-style
+# LearningPatternSynthesis.hook.ts (Copilot CLI has no hook API).
+weekly_synthesis() {
+  local stamp="$PAI_STATE_DIR/last-synthesis.stamp"
+  local week_now
+  week_now="$(date -u +%G-W%V)"
+  local week_last=""
+  [[ -f "$stamp" ]] && week_last="$(cat "$stamp" 2>/dev/null || true)"
+
+  if [[ "$week_now" == "$week_last" ]]; then
+    log "synthesis skipped (already ran week $week_now)"
+    return 0
+  fi
+
+  local synth="$PAI_DIR/tools/synthesize-learnings.sh"
+  if [[ -x "$synth" ]]; then
+    if "$synth" >>"$PAI_LOG_DIR/synthesis.log" 2>&1; then
+      printf '%s\n' "$week_now" >"$stamp"
+      log "synthesis ran for week $week_now"
+    else
+      log "synthesis failed for week $week_now (see synthesis.log)"
+    fi
+  else
+    log "synthesis skipped (script missing: $synth)"
+  fi
+}
+
+# integrity_scan — regression guard for phantom-PAI-root refs in skills/.
+# Logs findings to integrity.log; never blocks session exit.
+# Upstream equivalent: IntegrityMaintenance.ts + DocIntegrity.hook.ts.
+integrity_scan() {
+  local skills_dir="$PAI_DIR/skills"
+  local log_file="$PAI_LOG_DIR/integrity.log"
+  [[ -d "$skills_dir" ]] || return 0
+
+  local ts hits
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  # Phantom patterns: Tier 1 deliberately skipped PAI/SKILL.md, PAI/Tools/, PAI/Prompting.md.
+  hits="$(grep -rlE '~/\.pai/PAI/(SKILL\.md|Tools/|Prompting\.md)' "$skills_dir" 2>/dev/null | wc -l | tr -d ' ')"
+  if [[ "${hits:-0}" -gt 0 ]]; then
+    printf '%s integrity-scan phantom-ref-count=%d\n' "$ts" "$hits" >>"$log_file"
+  fi
+}
+
+post_session_tier3() {
+  # Tier 3 additions: weekly synthesis + integrity regression scan.
+  # Both non-fatal.
+  weekly_synthesis
+  integrity_scan
 }
 
 require_copilot() {
