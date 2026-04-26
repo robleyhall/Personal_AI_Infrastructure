@@ -87,6 +87,32 @@ EOF
 
 echo "capture-work-learning: saved to $OUT_FILE"
 
+# ── Best-effort: append AAAK pointer record ──────────────────────────
+APPEND_POINTER="$PAI_DIR/tools/append-pointer.sh"
+if [[ -x "$APPEND_POINTER" ]]; then
+  WING_GUESS="pai"
+  case "$SLUG_CLEAN" in
+    *microsoft*|*ms-*|*tub*|*mcaps*) WING_GUESS="microsoft" ;;
+    *homestead*|*farm*|*chicken*|*goat*) WING_GUESS="homestead" ;;
+    *pkm*|*devonthink*|*onedrive*) WING_GUESS="pkm" ;;
+    *health*|*medical*|*fitness*) WING_GUESS="health" ;;
+    *consulting*|*client*) WING_GUESS="consulting" ;;
+  esac
+  PTR_REL="${OUT_FILE#$PAI_DIR/}"
+  if ! "$APPEND_POINTER" \
+        --wing "$WING_GUESS" \
+        --drawer "$SLUG_CLEAN" \
+        --target "pai://$PTR_REL" \
+        --event-tag "work-learning,$(echo "$CATEGORY" | tr '[:upper:]' '[:lower:]')" \
+        --time "$TIMESTAMP" \
+        --quiet \
+      >/dev/null; then
+    printf 'capture-work-learning: warning: pointer append failed (artifact saved at %s)\n' \
+      "$OUT_FILE" >&2
+  fi
+fi
+
+
 # ── Optional: append JSONL reflection for Algorithm Phase-7 ───────────
 if [[ "$REFLECTION" == "1" ]]; then
   REFL_DIR="$PAI_DIR/MEMORY/LEARNING/REFLECTIONS"

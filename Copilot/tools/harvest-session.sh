@@ -57,6 +57,9 @@ fi
 }
 
 CAPTURE_TOOL="$(dirname "$0")/capture-work-learning.sh"
+LIB_DIR="$(dirname "$0")/lib"
+# shellcheck disable=SC1091
+[[ -f "$LIB_DIR/with-pai-lock.sh" ]] && source "$LIB_DIR/with-pai-lock.sh"
 
 # ── Collect candidate sessions (events.jsonl modified within DAYS days) ──
 mapfile -t SESSIONS < <(
@@ -85,6 +88,29 @@ for EVENTS in "${SESSIONS[@]}"; do
   SENTINEL="$SESSION_PATH/.harvested"
 
   if [[ -f "$SENTINEL" && $REHARVEST -eq 0 ]]; then
+    SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+    continue
+  fi
+
+  # Per-session lock prevents two concurrent harvesters from double-capturing
+  # the same session. Lock name keyed on session ID. If with-pai-lock isn't
+  # available (older deployments), fall back to a noop wrapper.
+  if declare -F with_pai_lock >/dev/null 2>&1; then
+    LOCK_PREFIX=("with_pai_lock" "harvest-${SESSION_ID:0:16}")
+  else
+    LOCK_PREFIX=("env")
+  fi
+
+  # Re-check sentinel under lock to close TOCTOU race.
+  do_capture() {
+    if [[ -f "$SENTINEL" && $REHARVEST -eq 0 ]]; then
+      return 99
+    fi
+    return 0
+  }
+  export -f do_capture
+  export SENTINEL REHARVEST
+  if ! "${LOCK_PREFIX[@]}" bash -c "do_capture"; then
     SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
     continue
   fi

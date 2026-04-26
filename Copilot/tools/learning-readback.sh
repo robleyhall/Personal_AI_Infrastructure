@@ -115,12 +115,39 @@ collect_engagement() {
   OUTPUT="${OUTPUT}${section}\n\n"
 }
 
-# ── Assemble ─────────────────────────────────────────────────────────
+# ── Recent pointers (last 20 events from pointers.aaak) ──────────────
+collect_pointers() {
+  local pf="$PAI_DIR/MEMORY/INDEX/pointers.aaak"
+  [[ -f "$pf" ]] || return 0
+
+  # Grab the last ~20 records by scanning for `§ end` markers from the tail.
+  # Each record is small (5-10 lines); bound at last 250 lines for safety.
+  local section
+  section="$(tail -n 250 "$pf" | awk '
+    BEGIN { rec=""; nrec=0 }
+    /^§ id / { rec = $0 "\n"; in_rec=1; next }
+    in_rec  { rec = rec $0 "\n" }
+    /^§ end$/ {
+      records[++nrec] = rec
+      rec=""; in_rec=0
+    }
+    END {
+      start = (nrec > 20 ? nrec - 19 : 1)
+      for (i=start; i<=nrec; i++) printf "%s\n", records[i]
+    }
+  ')"
+  [[ -n "$section" ]] || return 0
+
+  OUTPUT="${OUTPUT}### Recent Pointers (last 20 events)\n\n\`\`\`\n${section}\`\`\`\n\nGrep examples: \`grep -E '^§ W-research' ${pf}\`, \`grep -B1 'devonthink://' ${pf}\`\n\n"
+}
+
+
 collect_recent "ALGORITHM"
 collect_recent "SYSTEM"
 collect_wisdom
 collect_failures
 collect_engagement
+collect_pointers
 
 if [[ -n "$OUTPUT" ]]; then
   printf '## Session Memory Digest\n\n'

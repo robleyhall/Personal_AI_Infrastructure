@@ -133,3 +133,27 @@ fi
 printf '\n## Digest\n\n%s\n' "$WHAT_MATTERS_CONTENT" >>"$LEARNING_FILE"
 
 printf '%s\n' "$RESEARCH_DIR"
+
+# ── Best-effort: append AAAK pointer record ──────────────────────────
+# Failures here MUST NOT fail the parent capture (artifact already saved).
+APPEND_POINTER="$PAI_DIR/tools/append-pointer.sh"
+if [[ -x "$APPEND_POINTER" ]]; then
+  PTR_TARGET=""
+  if [[ -n "$ARTIFACT" ]]; then
+    PTR_TARGET="pai://MEMORY/RESEARCH/$MONTH_PREFIX/${DATE_PREFIX}_${TOPIC_SLUG}/REPORT.md"
+  else
+    PTR_TARGET="pai://MEMORY/RESEARCH/$MONTH_PREFIX/${DATE_PREFIX}_${TOPIC_SLUG}/SUMMARY.md"
+  fi
+  if ! "$APPEND_POINTER" \
+        --wing research \
+        --drawer "$TOPIC_SLUG" \
+        --target "$PTR_TARGET" \
+        --event-tag "research,$MODE" \
+        --time "$TIMESTAMP_UTC" \
+        --quiet \
+      >/dev/null; then
+    printf 'save-research-memory: warning: pointer append failed (research dir saved at %s)\n' \
+      "$RESEARCH_DIR" >&2
+  fi
+fi
+
