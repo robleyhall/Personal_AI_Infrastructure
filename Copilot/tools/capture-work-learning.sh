@@ -89,6 +89,8 @@ echo "capture-work-learning: saved to $OUT_FILE"
 
 # ── Best-effort: append AAAK pointer record ──────────────────────────
 APPEND_POINTER="$PAI_DIR/tools/append-pointer.sh"
+APPEND_DAILY="$PAI_DIR/tools/append-daily.sh"
+PTR_ID=""
 if [[ -x "$APPEND_POINTER" ]]; then
   WING_GUESS="pai"
   case "$SLUG_CLEAN" in
@@ -99,17 +101,31 @@ if [[ -x "$APPEND_POINTER" ]]; then
     *consulting*|*client*) WING_GUESS="consulting" ;;
   esac
   PTR_REL="${OUT_FILE#$PAI_DIR/}"
-  if ! "$APPEND_POINTER" \
+  if PTR_ID=$("$APPEND_POINTER" \
         --wing "$WING_GUESS" \
         --drawer "$SLUG_CLEAN" \
         --target "pai://$PTR_REL" \
         --event-tag "work-learning,$(echo "$CATEGORY" | tr '[:upper:]' '[:lower:]')" \
         --time "$TIMESTAMP" \
-        --quiet \
-      >/dev/null; then
+      2>/dev/null); then
+    :
+  else
+    PTR_ID=""
     printf 'capture-work-learning: warning: pointer append failed (artifact saved at %s)\n' \
       "$OUT_FILE" >&2
   fi
+fi
+
+# Best-effort: DAILY ledger entry.
+if [[ -x "$APPEND_DAILY" ]]; then
+  "$APPEND_DAILY" \
+    --source capture-work \
+    --event work-learning \
+    ${PAI_SESSION_ID:+--session "$PAI_SESSION_ID"} \
+    ${PTR_ID:+--ptr "$PTR_ID"} \
+    --detail "$SLUG_CLEAN cat=$CATEGORY" \
+    >/dev/null 2>&1 \
+    || printf 'capture-work-learning: warning: daily-ledger append failed\n' >&2
 fi
 
 

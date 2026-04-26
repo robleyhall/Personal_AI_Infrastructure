@@ -137,6 +137,8 @@ printf '%s\n' "$RESEARCH_DIR"
 # ── Best-effort: append AAAK pointer record ──────────────────────────
 # Failures here MUST NOT fail the parent capture (artifact already saved).
 APPEND_POINTER="$PAI_DIR/tools/append-pointer.sh"
+APPEND_DAILY="$PAI_DIR/tools/append-daily.sh"
+PTR_ID=""
 if [[ -x "$APPEND_POINTER" ]]; then
   PTR_TARGET=""
   if [[ -n "$ARTIFACT" ]]; then
@@ -144,16 +146,31 @@ if [[ -x "$APPEND_POINTER" ]]; then
   else
     PTR_TARGET="pai://MEMORY/RESEARCH/$MONTH_PREFIX/${DATE_PREFIX}_${TOPIC_SLUG}/SUMMARY.md"
   fi
-  if ! "$APPEND_POINTER" \
+  if PTR_ID=$("$APPEND_POINTER" \
         --wing research \
         --drawer "$TOPIC_SLUG" \
         --target "$PTR_TARGET" \
         --event-tag "research,$MODE" \
         --time "$TIMESTAMP_UTC" \
-        --quiet \
-      >/dev/null; then
+      2>/dev/null); then
+    :
+  else
+    PTR_ID=""
     printf 'save-research-memory: warning: pointer append failed (research dir saved at %s)\n' \
       "$RESEARCH_DIR" >&2
   fi
 fi
+
+# Best-effort: drop a DAILY ledger entry as well.
+if [[ -x "$APPEND_DAILY" ]]; then
+  "$APPEND_DAILY" \
+    --source save-research \
+    --event research-capture \
+    ${PAI_SESSION_ID:+--session "$PAI_SESSION_ID"} \
+    ${PTR_ID:+--ptr "$PTR_ID"} \
+    --detail "$TOPIC_SLUG mode=$MODE" \
+    >/dev/null 2>&1 \
+    || printf 'save-research-memory: warning: daily-ledger append failed\n' >&2
+fi
+
 

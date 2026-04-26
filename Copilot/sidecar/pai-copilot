@@ -108,15 +108,35 @@ pre_session() {
   log "session-start id=$SESSION_ID cwd=$PWD"
   echo "$SESSION_ID $(date -u +%s) start" >>"$PAI_STATE_DIR/sessions.log"
   touch "$PAI_STATE_DIR/session-${SESSION_ID}.started"
+
+  # Tier A1: append session-start to DAILY ledger (best-effort).
+  if [[ -x "$PAI_DIR/tools/append-daily.sh" ]]; then
+    "$PAI_DIR/tools/append-daily.sh" \
+      --source sidecar --event session-start \
+      --session "$SESSION_ID" \
+      --detail "cwd=$(basename "$PWD")" \
+      >/dev/null 2>&1 || log "append-daily session-start failed"
+  fi
 }
 
 post_session() {
   local exit_code="$1"
   log "session-end id=$SESSION_ID exit=$exit_code"
   echo "$SESSION_ID $(date -u +%s) end $exit_code" >>"$PAI_STATE_DIR/sessions.log"
+
+  # Tier A1: append session-close to DAILY ledger (best-effort).
+  if [[ -x "$PAI_DIR/tools/append-daily.sh" ]]; then
+    "$PAI_DIR/tools/append-daily.sh" \
+      --source sidecar --event session-close \
+      --session "$SESSION_ID" \
+      --detail "exit=$exit_code" \
+      >/dev/null 2>&1 || log "append-daily session-close failed"
+  fi
+
   set_tab_title "Terminal"
   cleanup_stale_state
   post_session_tier3
+  monthly_rollup
 }
 
 cleanup_stale_state() {
@@ -182,6 +202,52 @@ post_session_tier3() {
   weekly_synthesis
   integrity_scan
   prd_sync
+}
+
+# monthly_rollup — non-destructive: regenerates ~/.pai/MEMORY/DAILY/<YYYY-MM>.md
+# from individual day files at most once per month (sentinel-gated). Locked
+# via with-pai-lock to prevent two sessions racing on the first day of a
+# new month. Daily files are NOT deleted; the rollup is purely derived.
+monthly_rollup() {
+  local daily_dir="$PAI_DIR/MEMORY/DAILY"
+  [[ -d "$daily_dir" ]] || return 0
+
+  local prev_month
+  prev_month="$(date -u -v-1m +%Y-%m 2>/dev/null || date -u -d '-1 month' +%Y-%m 2>/dev/null || echo "")"
+  [[ -n "$prev_month" ]] || return 0
+
+  local sentinel="$PAI_STATE_DIR/daily-rollup-$prev_month.done"
+  [[ -f "$sentinel" ]] && return 0
+
+  local rollup_file="$daily_dir/$prev_month.md"
+
+  # shellcheck disable=SC1091
+  if [[ -f "$PAI_DIR/tools/lib/with-pai-lock.sh" ]]; then
+    source "$PAI_DIR/tools/lib/with-pai-lock.sh"
+  else
+    return 0
+  fi
+
+  do_rollup() {
+    {
+      printf '# DAILY rollup %s (UTC)\n\n' "$prev_month"
+      printf 'Derived from individual day files. Re-run safe.\n\n'
+      local f
+      for f in "$daily_dir/$prev_month-"*.md; do
+        [[ -f "$f" ]] || continue
+        printf '## %s\n\n' "$(basename "$f" .md)"
+        # Skip header (first 3 lines: # DAILY ..., blank, machine-event line, blank)
+        tail -n +4 "$f"
+        printf '\n'
+      done
+    } > "$rollup_file.tmp" && mv "$rollup_file.tmp" "$rollup_file"
+    touch "$sentinel"
+    log "monthly-rollup wrote $rollup_file"
+  }
+  export -f do_rollup
+  export prev_month daily_dir rollup_file sentinel PAI_LOG_DIR
+  with_pai_lock "daily-rollup-$prev_month" bash -c "do_rollup" \
+    >> "$PAI_LOG_DIR/sidecar.log" 2>&1 || log "monthly-rollup failed for $prev_month"
 }
 
 # prd_sync — approximates upstream PRDSync.hook.ts (PostToolUse/Write+Edit).

@@ -141,6 +141,18 @@ collect_pointers() {
   OUTPUT="${OUTPUT}### Recent Pointers (last 20 events)\n\n\`\`\`\n${section}\`\`\`\n\nGrep examples: \`grep -E '^§ W-research' ${pf}\`, \`grep -B1 'devonthink://' ${pf}\`\n\n"
 }
 
+# ── Today's DAILY ledger (last ~10 entries) ──────────────────────────
+collect_daily() {
+  local today
+  today=$(date -u +%Y-%m-%d)
+  local df="$PAI_DIR/MEMORY/DAILY/$today.md"
+  [[ -f "$df" ]] || return 0
+  local section
+  section="$(tail -n 10 "$df" | grep -E '^- [0-9]{2}:[0-9]{2}Z' || true)"
+  [[ -n "$section" ]] || return 0
+  OUTPUT="${OUTPUT}### Today's DAILY ledger (latest entries)\n\n\`\`\`\n${section}\n\`\`\`\n\n"
+}
+
 
 collect_recent "ALGORITHM"
 collect_recent "SYSTEM"
@@ -148,6 +160,7 @@ collect_wisdom
 collect_failures
 collect_engagement
 collect_pointers
+collect_daily
 
 if [[ -n "$OUTPUT" ]]; then
   printf '## Session Memory Digest\n\n'

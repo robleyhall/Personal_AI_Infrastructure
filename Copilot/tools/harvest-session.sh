@@ -153,6 +153,15 @@ ${BODY}"
     echo "$DIGEST" | PAI_SESSION_ID="$SESSION_ID" "$CAPTURE_TOOL" --slug "$SLUG" \
       >/dev/null
     echo "harvested: $SESSION_ID ($SLUG)"
+    # Best-effort DAILY ledger entry for the session-close event.
+    APPEND_DAILY="$(dirname "$0")/append-daily.sh"
+    if [[ -x "$APPEND_DAILY" ]]; then
+      "$APPEND_DAILY" \
+        --source harvest --event session-close \
+        --session "$SESSION_ID" \
+        --detail "slug=$SLUG" \
+        >/dev/null 2>&1 || true
+    fi
   else
     printf '%s\n\n---\n\n' "$DIGEST"
   fi
