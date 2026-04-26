@@ -211,6 +211,135 @@ the upstream `.ts` directly.
 
 ---
 
+## Tier 4 — Memory layer additions — 2026-04-26
+
+**All additive.** No upstream v4.0.3 files modified by this tier. Anchor tag
+`pre-memory-tier-a-20260426T2332Z` marks the pre-Tier-4 state on
+`feat/copilot-migration`.
+
+**Origin:** YouTube transcript comparison of MemPalace / AAAK / open-claw
+memory systems (`tasks/memory-incorporation-plan.md`). Tier B (MemPalace
+3D installation) is intentionally deferred. Tier C is skipped. This Tier 4
+implements only Tier A (markdown-only, additive) of that plan.
+
+**Boundary doc:** `tasks/memory-boundary-decision.md` records the six
+PAI ↔ DEVONthink-PKM ↔ MemPalace boundary decisions accepted before
+implementation.
+
+### A0 — File locking primitive
+- **`Copilot/tools/lib/with-pai-lock.sh`** — sourceable bash helper providing
+  `with_pai_lock <name> <cmd...>` and `with_pai_lock_block <name> <<BLOCK`.
+  Implementation uses `python3 -c` + `fcntl.flock` (BSD/macOS portable; no
+  GNU `flock(1)`). Lock files live under `~/.pai/state/locks/`. Default
+  timeout 10s, exit 75 (`EX_TEMPFAIL`) on timeout. **Foundation for every
+  multi-line writer added in Tier 4.**
+
+### A2 — AAAK pointer index
+- **`~/.pai/MEMORY/INDEX/pointers.aaak`** — single append-only event log
+  pointing to canonical artifacts in PAI, DEVONthink, the filesystem, or
+  a future MemPalace. Grammar header is in-band at the top of the file
+  (`§ id`, `§ W-…/R-…/D-…`, `@event`, `@t`, `@p @l @e @i`,
+  `§ ptr primary|canonical|historical`, `§ end`). Stable IDs of the form
+  `P-<UTCstamp>-<wing>-<drawer>` survive promotion / supersession events.
+- **`Copilot/tools/append-pointer.sh`** — single writer for the index.
+  Validates wing slug, URI scheme, and event verb. Outputs the assigned
+  pointer ID on stdout (callers chain into `append-daily.sh --ptr "$ID"`).
+- **URI schemes (Tier A: syntax-only):** `pai://MEMORY/...`, `file:///abs`,
+  `devonthink://<db-uuid>/<record-uuid>`, `mempalace://D-<id>`
+  (forward-looking; no resolver yet).
+- **Wing slugs:** `pai`, `microsoft`, `homestead`, `pkm`, `relationship`,
+  `research`, `health`, `consulting`.
+- **Event verbs:** `created | promoted | superseded | reaffirmed`.
+- **Wired (best-effort, never fails parent):**
+  `save-research-memory.sh`, `capture-work-learning.sh`,
+  `harvest-session.sh`. Failures emit warning to stderr only.
+- **Readback:** `learning-readback.sh` gained a "Recent Pointers (last 20)"
+  section.
+
+### A1 — DAILY machine ledger
+- **`~/.pai/MEMORY/DAILY/`** — daily files `YYYY-MM-DD.md`, machine-written
+  only. Format: `- HH:MMZ — <event> — source=<name> session=<id> ptr=<P-...> <detail>`.
+  **Strictly non-overlapping** with the human PKM journal at
+  `~/Library/CloudStorage/OneDrive-GreatBayLabs/PKM/00_Self/journal/`.
+- **`Copilot/tools/append-daily.sh`** — single writer. Idempotent on
+  `source + event + session + minute-bucket`. Locked.
+- **Sidecar wiring (`Copilot/sidecar/pai-copilot`):**
+  - `pre_session()` emits a `session-start` DAILY entry.
+  - `post_session()` emits a `session-close` DAILY entry, then calls
+    new `monthly_rollup()` (non-destructive, sentinel-gated, locked,
+    fires once per UTC month).
+- **Capture wiring:** research and work-learning captures emit a DAILY
+  entry referencing the pointer ID they just minted.
+- **Readback:** `learning-readback.sh` gained a "Today" section showing
+  the current day's DAILY entries.
+
+### A3 — TELOS temporal tags
+- **Convention:** individual TELOS bullets may carry inline
+  `_Verified: YYYY-MM-DD_` and/or `_Superseded by: P-<pointer-id>_` italic
+  markers. Bullets without markers = **unknown freshness** (no mass
+  backfill).
+- **`Copilot/tools/touch-telos-fact.sh`** — exact-match-or-fail tool.
+  Required args: `--file`, `--heading`, `--field`. Default dry-run; pass
+  `--yes` to apply. Refuses if 0 or >1 bullets match. Locked. Idempotent
+  on same UTC day.
+- **Runtime-only files** (USER/ is intentionally outside the repo):
+  - `~/.pai/USER/TELOS/README.md` — convention doc.
+  - File-level note added to `~/.pai/USER/TELOS/PROJECTS.md`,
+    `~/.pai/USER/TELOS/GOALS.md`, `~/.pai/USER/ABOUTME.md`.
+- **Explicitly NOT done (per rubber-duck critique):** no
+  `_Verified: <unknown>_` mass backfill; no `AISTEERINGRULES.md` rule
+  instructing every session to scan TELOS.
+
+### Tier 4 file inventory (repo)
+| Path | Status |
+|---|---|
+| `Copilot/tools/lib/with-pai-lock.sh` | new |
+| `Copilot/tools/append-pointer.sh` | new |
+| `Copilot/tools/append-daily.sh` | new |
+| `Copilot/tools/touch-telos-fact.sh` | new |
+| `Copilot/tools/save-research-memory.sh` | modified (best-effort pointer + DAILY) |
+| `Copilot/tools/capture-work-learning.sh` | modified (wing-slug guess + best-effort pointer + DAILY) |
+| `Copilot/tools/harvest-session.sh` | modified (per-session lock + session-close DAILY) |
+| `Copilot/tools/learning-readback.sh` | modified (Pointers + Today sections) |
+| `Copilot/sidecar/pai-copilot` | modified (`pre_session`, `post_session`, new `monthly_rollup()`) |
+| `tasks/memory-incorporation-plan.md` | new |
+| `tasks/memory-boundary-decision.md` | new |
+| `tasks/lessons.md` | Lesson 21 added |
+
+### Runtime-only artifacts (not in repo)
+| Path | Note |
+|---|---|
+| `~/.pai/MEMORY/INDEX/pointers.aaak` | Live append-only index. Grammar header in-band. |
+| `~/.pai/MEMORY/DAILY/YYYY-MM-DD.md` | Machine-written; created on demand. |
+| `~/.pai/state/locks/*.lock` | Lock files; touch-only. |
+| `~/.pai/USER/TELOS/README.md` | Temporal-tag convention. |
+
+### Divergence summary vs upstream PAI v4.0.3
+- **Net change:** entirely additive. Zero upstream files modified.
+- **Re-merge cost on next upstream bump:** zero for the Tier 4 surface;
+  any merge conflicts in the modified files (capture scripts, harvest,
+  sidecar) will be normal-sized and limited to the wiring blocks added
+  here. Each modification is bounded by clearly-marked Tier 4 hooks.
+- **Cumulative divergence (Tier 1+2+3+3+ + Tier 4):** still well within
+  the "fork-from-upstream-but-trackable" window. The Tier 3+ revert of
+  shell shims to direct bun invocation actually *reduced* divergence;
+  Tier 4 keeps that trend by adding tools alongside, not replacing
+  upstream surface.
+
+### Smoke-test status (at commit time)
+- A0 lock primitive: 5 concurrent multi-line writers → no interleave ✅
+- A2 pointer index: 4 tests (create, bad scheme, unknown wing, promote
+  with shared ID) ✅
+- A1 DAILY ledger: end-to-end via real research capture ✅; idempotent
+  re-run ✅
+- A3 touch-telos-fact: 6 tests (dry-run+diff, missing heading, missing
+  field, apply, same-day idempotent, multi-match refusal) ✅
+- Sidecar session-start/close DAILY entries: untested until next real
+  session.
+- `monthly_rollup()`: untested until first session of next UTC month.
+
+---
+
 ## Complete upstream v4.0.3 inventory (canonical reference)
 
 > **Intent:** a future porter reading only this table should be able to
