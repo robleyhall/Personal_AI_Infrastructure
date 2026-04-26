@@ -240,3 +240,16 @@ If something was deliberately skipped from upstream, write it down. Silent omiss
 **Rule:** Reinforces Lesson 18. `install.sh --delete` is for clean installs only. Any mid-session activation of newly-ported content = targeted `rsync -a` of just the changed paths. For agent dirs that don't exist yet under `~/.pai/`, `rsync` creates them safely. Never run the full installer to "just pick up" an incremental change.
 
 **Commit:** part of `134c93c` + `339c29e` workflow
+
+## Session: 2026-04-26 — Memory boundary work
+
+### Lesson 21: Verify PKM structure live before quoting plan docs as current state
+
+**What happened:** While drafting `tasks/memory-boundary-decision.md`, I cited `80_Wiki/` as the wiki location based on `~/projects/mini-ak-wiki/integrated-pkm-plan.md` (a 2026-04-22 *proposal*). Reality: the wiki actually lives at `10_Knowledge/wiki/` — already correctly placed inside PARA. Robley caught the error: a top-level `80_Wiki/` would have diluted PARA structure. The proposal had been superseded in practice but the doc still reads as if it's current.
+
+**Fix:** Verified live with `ls`, corrected Decision 5 in the boundary doc, flipped recommendation from "collapse" to "keep workflow in place," updated approval matrix and follow-on steps.
+
+**Rule:** Treat every `~/projects/.../plan.md` or `integrated-*.md` as a *historical proposal* until proven otherwise. Before quoting a path, directory layout, or convention from a plan doc, verify with `ls` against the actual filesystem (or `devonthink-stdio-search` against the actual DT database). Plan docs are not source-of-truth for current state. Source-of-truth is the live system.
+
+**Commit:** to be tagged with the Tier-A memory-incorporation work that follows this lesson.
+
