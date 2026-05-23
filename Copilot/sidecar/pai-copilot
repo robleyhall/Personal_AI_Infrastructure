@@ -15,10 +15,11 @@ set -uo pipefail
 PAI_DIR="${PAI_DIR:-$HOME/.pai}"
 PAI_STATE_DIR="$PAI_DIR/state"
 PAI_LOG_DIR="$PAI_DIR/logs"
+PAI_INSTRUCTIONS_DIR="$PAI_DIR/instructions"
 PAI_VOICE_URL="${PAI_VOICE_URL:-http://localhost:8888}"
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 
-mkdir -p "$PAI_STATE_DIR" "$PAI_LOG_DIR"
+mkdir -p "$PAI_STATE_DIR" "$PAI_LOG_DIR" "$PAI_INSTRUCTIONS_DIR"
 
 log() {
   printf '%s [pai-copilot] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >>"$PAI_LOG_DIR/sidecar.log"
@@ -99,12 +100,18 @@ capture_engagement() {
 
 pre_session() {
   export PAI_DIR PAI_SESSION_ID="$SESSION_ID"
+  if [[ -n "${COPILOT_CUSTOM_INSTRUCTIONS_DIRS:-}" ]]; then
+    export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$PAI_INSTRUCTIONS_DIR,$COPILOT_CUSTOM_INSTRUCTIONS_DIRS"
+  else
+    export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$PAI_INSTRUCTIONS_DIR"
+  fi
 
   set_tab_title "PAI"
   start_voice_server
   capture_engagement
   materialize_startup_digest
 
+  log "custom-instructions-dir=$PAI_INSTRUCTIONS_DIR"
   log "session-start id=$SESSION_ID cwd=$PWD"
   echo "$SESSION_ID $(date -u +%s) start" >>"$PAI_STATE_DIR/sessions.log"
   touch "$PAI_STATE_DIR/session-${SESSION_ID}.started"

@@ -46,7 +46,7 @@ check_deps() {
 
 install_tree() {
   say "installing to $PAI_DIR"
-  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,Bin,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/LEARNING/ALGORITHM,MEMORY/LEARNING/SYSTEM,MEMORY/RESEARCH,MEMORY/WORK,MEMORY/WISDOM/FRAMES,MEMORY/RELATIONSHIP,USER/SKILLCUSTOMIZATIONS,state,logs}
+  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,instructions/.github,Bin,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/LEARNING/ALGORITHM,MEMORY/LEARNING/SYSTEM,MEMORY/RESEARCH,MEMORY/WORK,MEMORY/WISDOM/FRAMES,MEMORY/RELATIONSHIP,USER/SKILLCUSTOMIZATIONS,state,logs}
 
   rsync -a --delete "$SRC/VoiceServer/" "$PAI_DIR/VoiceServer/"
   rsync -a --delete "$SRC/sidecar/"     "$PAI_DIR/sidecar/"
@@ -55,6 +55,8 @@ install_tree() {
   install -m 0644 "$SRC/README.md"           "$PAI_DIR/README.md"
   install -m 0644 "$SRC/Algorithm.md"        "$PAI_DIR/Algorithm.md"
   install -m 0644 "$SRC/ContextRouting.md"   "$PAI_DIR/ContextRouting.md"
+  install -m 0644 "$REPO_ROOT/.github/copilot-instructions.md" "$PAI_DIR/instructions/AGENTS.md"
+  install -m 0644 "$REPO_ROOT/.github/copilot-instructions.md" "$PAI_DIR/instructions/.github/copilot-instructions.md"
 
   chmod +x \
     "$PAI_DIR/VoiceServer/start.sh" \

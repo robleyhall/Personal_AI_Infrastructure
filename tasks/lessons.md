@@ -4,6 +4,16 @@
 
 ---
 
+## Session: 2026-05-14 — Active project source check
+
+### Lesson: Active projects live in TELOS, not active.md
+
+**What happened:** A request for active projects showed that `~/.pai/MEMORY/WORK/active.md` only records the current/last PAI work marker, while the durable project registry lives in `~/.pai/USER/TELOS/PROJECTS.md`.
+
+**Rule:** For "what projects are active?" answer from `TELOS/PROJECTS.md`; use `MEMORY/WORK/active.md` only as the current-session work marker.
+
+---
+
 ## Session: 2026-04-19 — Phase 0 spike setup
 
 ### Lesson 1: Research skill has hardcoded custom sub-agent names
@@ -253,3 +263,22 @@ If something was deliberately skipped from upstream, write it down. Silent omiss
 
 **Commit:** to be tagged with the Tier-A memory-incorporation work that follows this lesson.
 
+---
+
+## Session: 2026-05-21 — X post save workflow standardization
+
+### Lesson 22: Standardize X-post PKM saves on `save_x_content.sh`
+
+**What happened:** A request to save an X post initially drifted through public oEmbed, raw X HTML, web search, and ad hoc X API attempts before Robley pointed to the working script in `../youtube-transcript-archiver/save_x_content.sh`. That script successfully handled the X Article redirect, generated source and `extract_wisdom` artifacts, and provided the material for the Career PKM note.
+
+**Fix:** Added `SaveXPostToPKM` to the Parser skill in both repo-local and installed copies. It names `/Users/robley/projects/youtube-transcript-archiver/save_x_content.sh` as the standard tool, documents expected X Article redirect behavior, and records the Careers PKM destination.
+
+**Rule:** For "save this X post" or "save this X post to PKM", use the Parser `SaveXPostToPKM` workflow first. Do not start with oEmbed, raw X HTML, Nitter, web search, or ad hoc GraphQL unless the standard script fails. Treat "xurl" as historical shorthand for the same successful capture path, not as a separate tool to rediscover.
+
+### Lesson 23: `pai` sidecar file access is not instruction loading
+
+**What happened:** `pai` sessions launched outside `Personal_AI_Infrastructure` showed sidecar activity in logs but did not show PAI mode headers. The wrapper was running and passing `--add-dir ~/.pai`, but the PAI instruction contract lived only in the repo-local `.github/copilot-instructions.md`, so other directories did not load it.
+
+**Fix:** The sidecar now exports `COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$PAI_DIR/instructions"` before launching Copilot. The installed runtime contains the full PAI instruction contract at `~/.pai/instructions/AGENTS.md` and `~/.pai/instructions/.github/copilot-instructions.md`; the installer recreates those files from the repo-local PAI instructions.
+
+**Rule:** Do not equate `--add-dir ~/.pai` with PAI being active. `--add-dir` only allows file access. PAI behavior requires a loaded instruction file, either repo-local or through `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.

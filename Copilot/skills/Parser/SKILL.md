@@ -57,6 +57,7 @@ Running the **WorkflowName** workflow in the **Parser** skill to ACTION...
 | Workflow | Trigger | File |
 |----------|---------|------|
 | **ExtractNewsletter** | "parse newsletter" | `Workflows/ExtractNewsletter.md` |
+| **SaveXPostToPKM** | "save X post", "save x-post to PKM", "archive tweet" | `Workflows/SaveXPostToPKM.md` |
 | **ExtractTwitter** | "parse tweet", "X thread" | `Workflows/ExtractTwitter.md` |
 | **ExtractArticle** | "parse article", "web page" | `Workflows/ExtractArticle.md` |
 | **ExtractYoutube** | "parse YouTube", "video transcript" | `Workflows/ExtractYoutube.md` |
