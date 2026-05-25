@@ -4,6 +4,16 @@
 
 ---
 
+## Session: 2026-05-25 — PKM Phase 2 consolidation boundary
+
+### Lesson: PKM is constructed; DEVONthink/Data are captured
+
+**What happened:** Planning for PKM sprawl surfaced several storage roots: OneDrive PKM, DEVONthink databases, `WorkingStorage/Data`, agent repos, and app-local databases. Robley clarified that the PKM should be curated/constructed knowledge, while DEVONthink and Data are raw/captured layers that can expose and index the curated PKM but should not own it.
+
+**Rule:** Preserve the layer boundary when planning or implementing PKM work: OneDrive PKM owns curated files; DEVONthink augments with search/classification/indexing; `WorkingStorage/Data` remains a raw historical archive to inventory and promote from selectively; agent repos remain workflow engines.
+
+---
+
 ## Session: 2026-05-14 — Active project source check
 
 ### Lesson: Active projects live in TELOS, not active.md

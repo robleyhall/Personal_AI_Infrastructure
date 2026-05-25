@@ -1,7 +1,9 @@
 # PAI → Copilot CLI Migration: Evaluation & Plan
 
-## Current status — 2026-05-23
+## Current status — 2026-05-25
 
+- Created `PKM-phase-2-plan.md` as the editable local plan for PKM/DEVONthink/Data consolidation. No PKM, DEVONthink, or `WorkingStorage/Data` folders were moved or modified.
+- PKM Phase 2 boundary decision: OneDrive PKM is constructed/curated truth; DEVONthink and `WorkingStorage/Data` are captured/raw/search layers; project repos and app-local databases are engines/runtime state, not knowledge homes.
 - Completed X-post capture standardization: Parser now routes "save X post" requests to `SaveXPostToPKM`, which uses `/Users/robley/projects/youtube-transcript-archiver/save_x_content.sh`.
 - Completed cross-directory PAI activation: `pai-copilot` exports `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` so PAI mode instructions load outside this repository.
 - Open follow-up: the untracked transcript file `Every_Claude_Code_Memory_System_Compared_So_You_Do_UHVFcUzAGlM_20260426_183504_transcript.txt` remains uncommitted because it was not part of this session's intentional repo changes.
