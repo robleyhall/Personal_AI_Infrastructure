@@ -6,17 +6,24 @@
 
 ## 1. Working Doctrine
 
-PKM is the constructed knowledge layer. DEVONthink and `WorkingStorage/Data` are captured/raw layers.
+The OneDrive PKM is the canonical home for curated knowledge, records, active project material, and constructed/synthesized outputs.
 
-The target is not to merge everything into one folder. The target is to make each layer's job explicit, preserve raw archives, and promote only selected material into the curated PKM.
+OneDrive also has a second strategic role: it is material that Microsoft 365 Copilot can access and reason over away from the main machine. That means cloud placement is not only a backup/sync decision; it is also an AI-availability decision.
+
+DEVONthink is a tool layer, not a knowledge area. It indexes, classifies, searches, and exposes material from the PKM and raw archives. The distinction is blurry when DEVONthink acts as an inbox or temporary capture surface, but durable curated truth should remain in ordinary files in the OneDrive PKM.
+
+`~/WorkingStorage/Data` is a raw historical source archive. The current intent is to keep it unchanged as source material, while using DEVONthink indexing to make it searchable and useful. "Evaluate" means understand what is there and decide what, if anything, should be copied, referenced, or synthesized into PKM; it does not mean reorganizing the raw archive.
+
+The target is not to merge everything into one folder. The target is to make each layer's job explicit, preserve raw archives, and promote or synthesize only selected material into the curated PKM.
 
 | Layer | Role | Canonical? | Notes |
 |---|---|---:|---|
-| `~/Library/CloudStorage/OneDrive-GreatBayLabs/PKM` | Curated/constructed knowledge, active projects, records | Yes | Must remain readable without DEVONthink |
-| DEVONthink databases | Capture, indexing, AI classification, search | No, except transient inbox/raw custody | DEVONthink should augment PKM, not own constructed truth |
-| `~/WorkingStorage/Data` | Historical captured archive | Raw canonical archive | Evaluate and promote selectively; do not wholesale restructure |
+| `~/Library/CloudStorage/OneDrive-GreatBayLabs/PKM` | Curated/constructed knowledge, active project material, records, selected AI-available reference/source material | Yes | Must remain readable without DEVONthink; accessible to Microsoft 365 Copilot |
+| DEVONthink databases | Tool layer for indexing, classification, search, and inbox/capture workflows | Tool canonical only | DEVONthink should augment PKM and raw archives, not own constructed truth |
+| `~/WorkingStorage/Data` | Raw historical source archive | Raw source canonical | Keep unchanged; index/search via DEVONthink; copy/reference/synthesize selected material into PKM |
 | `~/projects/*` | Code, agents, tooling, workflow engines | Code canonical only | Durable outputs/state should promote into PKM when useful |
-| App-local databases | Operational state | No | Keep only as runtime state unless exported/promoted |
+| `PKM/30_Projects/*` | Active project knowledge/workspace material | PKM canonical for project records and synthesized project context | Distinct from code repos; this is the project knowledge working set |
+| App-local databases | Runtime/operational state owned by a specific app or tool | No, unless exported to ordinary files | Examples include agent runtime stores, caches, SQLite databases, browser/app indexes, and similar implementation details |
 
 ## 2. Current Observed State
 
@@ -45,7 +52,7 @@ Largest visible top-level folders by count or size include:
 - `Personal`
 - `homesteading`
 
-Initial interpretation: this is captured history, not a folder tree to "fix" by renaming everything. It needs sampling, provenance preservation, and selective promotion.
+Initial interpretation: this is source material, not a folder tree to "fix" by renaming everything. It should remain unchanged. Any Phase 2 work should create external manifests, notes, references, or synthesized PKM outputs without reorganizing the archive itself.
 
 ### PKM
 
@@ -77,7 +84,7 @@ Observed databases include:
 - `Research.dtBase2`
 - `email-dtp.dtBase2`
 
-Planning assumption: DEVONthink should index and enrich the PKM, but the durable curated files should remain in OneDrive PKM.
+Planning assumption: DEVONthink should index and enrich the PKM and all of `WorkingStorage/Data`, but durable curated files should remain in OneDrive PKM and the raw archive should remain unchanged.
 
 ### Project/tooling folders
 
@@ -87,18 +94,21 @@ Planning assumption: DEVONthink should index and enrich the PKM, but the durable
 
 These are not knowledge homes. They are engines. Durable outputs, decisions, and synthesized findings should land in PKM.
 
+This is separate from `PKM/30_Projects`, which is intended to be the PKM working set for active project material.
+
 ## 3. Phase 2 Goals
 
 - Preserve the PKM as the curated, constructed knowledge system.
-- Keep raw capture archives stable and auditable.
+- Preserve OneDrive as the cloud AI-reasoning surface for selected material that should be available to Microsoft 365 Copilot.
+- Keep raw source archives stable, unchanged, indexed, and auditable.
 - Make DEVONthink an indexing/classification/search layer over the PKM, not the owner of curated truth.
 - Define explicit promotion lanes from captured material into curated PKM.
 - Reduce source-of-truth ambiguity across PAI, research-agent, DEVONthink, and OneDrive.
-- Avoid destructive or premature restructuring of `WorkingStorage/Data`.
+- Avoid restructuring `WorkingStorage/Data`.
 
 ## 4. Non-Goals
 
-- No wholesale restructuring of `WorkingStorage/Data`.
+- No restructuring of `WorkingStorage/Data`.
 - No bulk moves without a manifest and rollback plan.
 - No deletion of raw historical captures during Phase 2.
 - No migration of app-local databases into PKM as opaque blobs.
@@ -110,7 +120,7 @@ These are not knowledge homes. They are engines. Durable outputs, decisions, and
 - [ ] Every major storage root has a documented role and source-of-truth status.
 - [ ] The PKM remains independently usable through OneDrive files without DEVONthink.
 - [ ] DEVONthink indexing of the PKM is treated as an add-on capability.
-- [ ] `WorkingStorage/Data` has a manifest and evaluation status by top-level folder.
+- [ ] `WorkingStorage/Data` has an external manifest/index summary by top-level folder, without changing the archive.
 - [ ] Promotion lanes from raw capture to curated PKM are documented.
 - [ ] Research-agent durable outputs have a defined PKM destination.
 - [ ] PAI/project task state has one preferred durable location.
@@ -130,6 +140,7 @@ Create a compact map of all relevant roots:
 - What belongs there
 - What does not belong there
 - Promotion path, if any
+- Whether the material should be available to Microsoft 365 Copilot
 
 Output candidate: `PKM/10_Knowledge/wiki/pkm-storage-boundaries.md` or a project note under `PKM/30_Projects/PKMBuildout/`.
 
@@ -157,11 +168,11 @@ Candidate policy:
 - Synthesized reusable knowledge: file into `PKM/10_Knowledge/wiki`.
 - Operational lessons: PAI memory or project task state first; promote to wiki only when generally reusable.
 
-### Workstream D: `WorkingStorage/Data` evaluation
+### Workstream D: `WorkingStorage/Data` index and source-map
 
-Do not move the archive. Build an inventory and sample it.
+Do not move or restructure the archive. It is raw source material and is already indexed by DEVONthink. Build an external source map that explains what is there and where selected material might be useful.
 
-For each top-level folder:
+For each top-level folder, document:
 
 - Size
 - File count
@@ -171,50 +182,51 @@ For each top-level folder:
 - Topic/domain
 - Duplicate likelihood
 - PKM promotion value
-- Recommended disposition
+- Recommended PKM relationship
 
-Disposition values:
+PKM relationship values:
 
 - `raw-only`
-- `sample-more`
-- `promote-selected`
+- `reference-from-pkm`
+- `copy-selected-to-pkm`
 - `synthesize-to-wiki`
-- `candidate-cold-archive`
 - `needs-human-review`
 
-### Workstream E: DEVONthink role cleanup
+### Workstream E: DEVONthink role clarification
 
 Confirm intended database roles:
 
 - Which DT database indexes PKM?
+- Which DT database indexes all of `WorkingStorage/Data`?
 - Which databases are legacy/raw archives?
 - Which inboxes are active?
 - Which databases can be left alone as historical capture stores?
 
-Desired rule: DEVONthink can search, classify, tag, and expose; OneDrive PKM owns constructed files.
+Desired rule: DEVONthink can search, classify, tag, and expose; OneDrive PKM owns constructed files; `WorkingStorage/Data` remains unchanged raw source material.
 
 ### Workstream F: Promotion workflow
 
 Define a standard promotion path:
 
-1. Capture lands in DEVONthink inbox, `PKM/00_Inbox`, research-agent output, or `WorkingStorage/Data`.
+1. Capture lands in DEVONthink inbox, `PKM/00_Inbox`, research-agent output, or already exists in `WorkingStorage/Data`.
 2. Triage decides whether it is a record, reference, or synthesizable knowledge.
-3. Permanent PKM location is selected.
-4. Provenance is preserved.
-5. DEVONthink index/tag update happens after file placement.
-6. Wiki synthesis happens only for material that teaches something reusable.
+3. Decide whether cloud AI availability via Microsoft 365 Copilot is useful enough to justify OneDrive placement.
+4. Permanent PKM location is selected.
+5. Provenance is preserved.
+6. DEVONthink index/tag update happens after file placement, when applicable.
+7. Wiki synthesis happens only for material that teaches something reusable.
 
-## 7. Historical Archive Evaluation Method
+## 7. Historical Archive Source-Mapping Method
 
-Start with sampling, not moving.
+Start with external source mapping, not moving.
 
 For each major `WorkingStorage/Data` folder:
 
-1. Generate a manifest.
+1. Generate or update an external manifest.
 2. Sample 10-25 representative files by type and age.
 3. Identify whether the folder is mostly records, reference material, correspondence, project history, or mixed.
-4. Decide whether the folder deserves promotion work.
-5. Record disposition.
+4. Decide whether the folder deserves PKM reference, selected copy-out, or synthesis work.
+5. Record the PKM relationship.
 
 Suggested first-pass priority:
 
@@ -228,24 +240,43 @@ Suggested first-pass priority:
 
 | Risk | Guardrail |
 |---|---|
-| Premature restructuring destroys context | Inventory and sample before moving |
+| Premature restructuring destroys context | Do not restructure `WorkingStorage/Data`; use external source maps |
 | DEVONthink becomes hidden source of truth | Keep curated files in OneDrive PKM |
 | Duplicates multiply | Prefer provenance links and manifests before copying |
-| Sensitive material gets promoted too broadly | Tag sensitivity during evaluation |
+| Sensitive material gets promoted too broadly | Tag sensitivity during source mapping |
 | Project/runtime DBs become knowledge silos | Promote durable outputs, not runtime state |
-| Archive cleanup becomes endless | Use folder-level dispositions, not item-level perfection |
+| Archive cleanup becomes endless | Use folder-level PKM relationships, not item-level perfection |
 
-## 9. Open Questions
+## 9. Session Decisions and Resume Context
 
-- Should the first Phase 2 execution target be project/task state sprawl or `WorkingStorage/Data` inventory?
+Decisions clarified on 2026-05-25:
+
+- OneDrive PKM is the canonical cloud home for curated knowledge, records, active project material, and synthesized outputs.
+- OneDrive also matters because Microsoft 365 Copilot can reason over material stored there while away from the main system.
+- DEVONthink is a tool/index/search/classification layer, not a knowledge area or source-of-truth store.
+- `~/WorkingStorage/Data` is the unchanged raw historical source archive and is indexed by DEVONthink.
+- Because `~/WorkingStorage/Data` is about 10 GB and OneDrive for Business plans commonly provide about 1 TB per user, mirroring public harvested source material into OneDrive is reasonable if clearly marked as a mirror.
+- The recommended model is mirror, not migrate: keep `~/WorkingStorage/Data` canonical locally and create an AI-available OneDrive mirror only if useful for M365 Copilot reasoning.
+- Suggested OneDrive mirror naming: `PKM/20_Reference/AI_Available_Source_Material/Data` or similar, with a note that canonical source remains `~/WorkingStorage/Data`.
+
+OneDrive incident context:
+
+- A second OneDrive install created a stale "OneDrive 2" File Provider domain and a nested symlink from the real OneDrive folder to `OneDrive2-GreatBayLabs`.
+- The nested symlink/cache entries were removed, and the real OneDrive root was verified intact at `~/Library/CloudStorage/OneDrive-GreatBayLabs`.
+- Verified present: `PKM`, `PKM/10_Knowledge`, `PKM/20_Reference`, and `PKM/30_Projects`.
+- Remaining cleanup item: macOS still reports a stale File Provider/LaunchServices registration for "OneDrive 2" pointing at the deleted/trash app, plus an empty `~/Library/CloudStorage/OneDrive2-GreatBayLabs` folder that has File Provider ACL protection.
+
+## 10. Open Questions
+
+- Should the first Phase 2 execution target be project/task state sprawl or the `WorkingStorage/Data` source map?
 - Should there be a formal `PKM/20_Reference/Raw Historical Archive Index/` or should archive manifests live under `30_Projects/PKMBuildout/`?
 - Which DEVONthink database is intended to be the long-term PKM index: `PKM.dtBase2`, `Main.dtBase2`, or both?
 - Should sensitive record categories use a separate PKM convention, or is the existing folder structure plus DEVONthink tagging enough?
 - What is the desired lifecycle for root-level PKM files like `copilot-shared-state.md` and `copilot-instructions.md`?
+- Should the AI-available Data mirror live inside `20_Reference`, a dedicated `20_Reference/AI_Available_Source_Material`, or a separate top-level PKM area?
 
-## 10. Recommended Next Move
+## 11. Recommended Next Move
 
-Start with **Workstream B: Project and task state consolidation**, then do **Workstream D: `WorkingStorage/Data` evaluation**.
+Start with **Workstream B: Project and task state consolidation**, then do **Workstream D: `WorkingStorage/Data` index and source-map**.
 
 Reason: project/task state sprawl is smaller and active. Cleaning it up first creates better operating discipline before touching the large historical archive.
-
