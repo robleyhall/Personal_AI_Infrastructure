@@ -6,6 +6,106 @@
 
 ## Session: 2026-05-25 — PKM Phase 2 consolidation boundary
 
+### Lesson: Repeated preference conflicts are instruction defects
+
+**What happened:** Robley had repeatedly stated that he did not want voice/TTS support, but PAI Copilot still called the local voice notification endpoint because the installed instruction bundle explicitly required `/notify` calls after non-minimal responses.
+
+**Fix:** Removed the voice/TTS call requirement from `.github/copilot-instructions.md`, synced the installed copies under `~/.pai/instructions/`, and added a Self-Improvement Trigger requiring repeated unwanted behavior to be traced to its source and proposed as an instruction or memory fix.
+
+**Rule:** When Robley identifies repeated unwanted assistant behavior, stop it immediately, trace whether instructions/memory caused it, and ask or act on the appropriate durable instruction change instead of only acknowledging the one-off mistake.
+
+**2026-06-02 follow-up:** The instruction fix was insufficient by itself. The active sidecar still contained deterministic voice runtime code (`PAI_VOICE_URL`, `start_voice_server`, and a pre-session `start_voice_server` call), and the installer still copied `VoiceServer`, exported `PAI_VOICE_URL`, and warned about `bun`/`say` for voice. Removed those runtime/installer paths from both the installed sidecar and repo source, stopped the existing port-8888 listener, and updated the user guide to say voice is disabled. Rule refinement: for a removed feature, verify both AI instructions and deterministic wrapper/installer code; otherwise the behavior can return even when the prompt says not to do it.
+
+---
+
+## Session: 2026-06-04 — Hermes org-roam PKM run
+
+### Lesson: Kanban workers need workspace-visible runner paths
+
+**What happened:** A batch card that invoked `~/.hermes/scripts/pkm_org_roam_classify.py` blocked because the kanban worker container only had the mounted `/workspace/*` paths, not the VM-host `~/.hermes/scripts` path.
+
+**Fix:** Copied the runner into the mounted inbox tree and changed the card command to call `/workspace/inbox/input/org-roam-pkm/scripts/pkm_org_roam_classify.py` so the worker runtime could execute it directly.
+
+**Rule:** For Hermes kanban tasks, write commands against mounted `/workspace` paths, not VM-host-only paths. If a task needs a helper script, place that script somewhere the worker container can see.
+
+### Lesson: The merged manifest is the source of truth after retries
+
+**What happened:** Retried batches and model comparisons left duplicate staged copies in multiple buckets. The staged tree accumulated stale artifacts even though the JSONL manifests stayed correct.
+
+**Rule:** When a Hermes run can be retried or reclassified, trust the merged manifest JSONL for final routing. Treat the staged tree as an intermediate artifact, not as the authoritative result.
+
+---
+
+### Lesson: Hermes file exchange uses separate inbox and outbox roots
+
+**What happened:** The initial Hermes file-exchange mount nested input and output-style subdirectories under the inbox root, which blurred inbound and outbound semantics.
+
+**Fix:** Corrected the live Hermes Docker volume config to use separate sibling roots: `/home/parallels/hermes-inbox:/workspace/inbox` for files provided to Hermes, and `/home/parallels/hermes-outbox:/workspace/outbox` for generated projects, processed artifacts, reports, and exports.
+
+**Rule:** Do not put Hermes-generated output under an inbox path. Tell Hermes to read from `/workspace/inbox` and write completed work to `/workspace/outbox`; on the VM host those map to `/home/parallels/hermes-inbox` and `/home/parallels/hermes-outbox`.
+
+**2026-06-02 follow-up:** Added `/home/parallels/hermes-work:/workspace/work` as the persistent PVC-style project workspace. For multi-step projects, tell Hermes to build under `/workspace/work/<project-name>` and only copy finished deliverables to `/workspace/outbox/<project-name>`.
+
+---
+
+### Lesson: Hermes cron synthesis prompts must be tool-bounded
+
+**What happened:** The `Daily Synthesis & Forward Planning` cron job failed with `Context length exceeded (4,800 tokens). Cannot compress further` because its prompt asked Hermes to browse sessions, perform detail lookups for each session, and load memory. In the cron environment, memory was unavailable and session detail lookups produced `around_message_id` errors, creating avoidable tool churn and context pressure.
+
+**Fix:** Replaced the prompt with a bounded workflow: exactly one compact `session_search` browse call, maximum 3 recent sessions, no per-session detail lookups, no memory calls, no full transcripts/logs, and final output under 500 words.
+
+**Rule:** For recurring Hermes cron jobs, prompts must include explicit tool-call, source-count, and output-size limits. Do not ask cron jobs to load broad memory/session surfaces unless the tool supports compact bounded summaries and failure fallback.
+
+---
+
+### Lesson: Hermes kanban workspaces need explicit Docker mounts
+
+**What happened:** Kanban workers received scratch workspace paths under `/home/parallels/.hermes/kanban/workspaces/<task>`, but Docker tool containers did not mount that path. `write_file` calls to the absolute kanban workspace failed inside the container, writes to `/workspace` also failed, and the worker exited without `kanban_complete` or `kanban_block`.
+
+**Fix:** Added a narrow Docker volume mapping `/home/parallels/.hermes/kanban/workspaces:/home/parallels/.hermes/kanban/workspaces`, restarted Hermes services, and stopped stale Hermes tool containers so new containers inherit the mount. Salvaged durable artifacts into `/home/parallels/hermes-outbox/kanban/<task>/` because scratch kanban workspaces can disappear after completion.
+
+**Rule:** When Hermes kanban tasks must write files, ensure the injected `HERMES_KANBAN_WORKSPACE` absolute path is mounted into Docker at the same absolute path. Durable deliverables should be copied or written to `/workspace/outbox` or `/home/parallels/hermes-outbox`, not left only in scratch kanban workspaces or `/tmp`.
+
+---
+
+### Lesson: Hermes dashboard stdout can flood VM syslog
+
+**What happened:** The Ubuntu VM root filesystem filled because `/var/log/syslog` grew to roughly 30GB. The active flood was `hermes-dashboard-local.sh` emitting large JSON/status events through systemd journal into rsyslog; after truncation, syslog grew from hundreds of MB to 1.4GB in seconds. A separate `hermes-dashboard-proxy.service` was also restart-looping because `hermes-dashboard-mac-access.service` already owned port 9120.
+
+**Fix:** Set `StandardOutput=null` and `StandardError=null` drop-ins for the dashboard local and Mac-access user services, disabled the redundant proxy unit, truncated the oversized syslog, restarted rsyslog, changed `/etc/logrotate.d/rsyslog` to size-based `size 100M` rotation, and added an enabled `logrotate-hourly.timer`.
+
+**Rule:** For Hermes dashboard services, do not pipe TUI/status stdout into journal/syslog. Keep Mac access on `hermes-dashboard-mac-access.service`; do not run the separate proxy on the same port. Syslog should have an hourly size-based guardrail, not just Ubuntu's default daily timer plus weekly rsyslog rotation.
+
+---
+
+### Lesson: Expose Hermes durable files from the VM host, not tool containers
+
+**What happened:** A Hermes tool-container task tried to expose a file browser by asking for `docker port add <container_id> 8080:8080`. Docker cannot add port publishing to an existing container, that command does not exist, and publishing a fixed port globally through Hermes tool-container settings would conflict across persistent tool containers.
+
+**Fix:** Installed a VM-host user service, `hermes-filebrowser.service`, running `/home/parallels/.local/bin/hermes-filebrowser.py` on port 8080. It serves only the durable Hermes exchange roots: `/home/parallels/hermes-inbox`, `/home/parallels/hermes-work`, and `/home/parallels/hermes-outbox`. It is reachable from the Mac at `http://10.211.55.4:8080/`.
+
+**Rule:** Do not rely on ad hoc Hermes tool containers for user-facing long-lived HTTP services. For browsing durable Hermes outputs, run a narrow host-level service over the mounted durable folders instead of trying to retrofit Docker port mappings onto an existing container.
+
+---
+
+### Lesson: Preserve file ownership when editing VM app state
+
+**What happened:** A direct `prlctl exec` root edit to Hermes `jobs.json` changed ownership to `root:root`. Hermes gateway runs as `parallels`, so the dashboard and scheduler could not read the cron database and the job appeared to disappear.
+
+**Rule:** When editing application state inside the Ubuntu VM, run edits as the owning service user or explicitly restore ownership/permissions before restarting services. For Hermes cron state, `/home/parallels/.hermes/cron/jobs.json` must be readable by `parallels`.
+
+---
+
+### Lesson: Installed personal skills are runtime routes
+
+**What happened:** Robley asked to capture a USPS tracking page using the prior page-capture workflow, but PAI Copilot only checked the built-in Copilot `skill` registry and repo-local skills. It missed the installed runtime skill at `~/.pai/skills/_CAPTURE/SKILL.md`, which was the correct deterministic route.
+
+**Fix:** Added `_CAPTURE` to the PAI Copilot skill routing instructions in the canonical and installed instruction copies. URL capture requests now explicitly route to `~/.pai/skills/_CAPTURE/SKILL.md` and `~/.pai/Bin/pai-capture` before any `web_fetch`, `curl`, or ad hoc browser fallback.
+
+**Rule:** For personal URL capture/archive/save/clip/page-to-PDF requests, check installed runtime skills under `~/.pai/skills/` and use `_CAPTURE` first even if the Copilot `skill` tool does not list it.
+
+---
+
 ### Lesson: PKM is constructed; DEVONthink/Data are captured
 
 **What happened:** Planning for PKM sprawl surfaced several storage roots: OneDrive PKM, DEVONthink databases, `WorkingStorage/Data`, agent repos, and app-local databases. Robley clarified that the PKM should be curated/constructed knowledge, while DEVONthink and Data are raw/captured layers that can expose and index the curated PKM but should not own it.
