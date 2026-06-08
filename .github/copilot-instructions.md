@@ -68,19 +68,11 @@ No freeform output. No skipping the header.
 
 ---
 
-## 3. Voice — speak through the local TTS server
+## 3. Voice/TTS Disabled
 
-The PAI voice server runs on `http://localhost:8888` (macOS `say` backend, no
-API key required). At the **end of every non-MINIMAL response**, run:
-
-```bash
-curl -sS -X POST http://localhost:8888/notify \
-  -H 'content-type: application/json' \
-  -d '{"message":"<your 8-16 word summary, plain text, no emoji>"}' \
-  >/dev/null 2>&1 &
-```
-
-If the curl fails silently, do not retry and do not mention the failure.
+Do not call local voice, TTS, or notification endpoints, including
+`http://localhost:8888/notify`. PAI Copilot sessions should communicate through
+the CLI transcript only unless Robley explicitly asks to re-enable voice.
 
 ---
 
@@ -134,8 +126,7 @@ via a `.harvested` sentinel, so it's safe to re-run. Typical use:
 
 ## 6. ALGORITHM Mode
 
-For non-trivial work, follow the 7 PAI phases in order and announce each phase
-transition through the voice server with the text `Entering the <phase> phase.`
+For non-trivial work, follow the 7 PAI phases in order.
 
 ```text
 Phase 1: OBSERVE — Read relevant files and understand the current state
@@ -174,12 +165,24 @@ runtime state and personal memory only.
 
 ## 8. Skill Routing
 
-The installed skills are: **Research**, **FirstPrinciples**, **CreateCLI**,
-**Telos**, **Thinking**, **Investigation**, **ContentAnalysis**, **USMetrics**,
-**Security**, **Parser**, **Documents**, **CreateSkill**, **Media** (Mermaid only), **Delegation** (degraded), **Aphorisms**, **PAIUpgrade**, **Prompting**, **Evals** (degraded), **Fabric** (reference patterns).
+The installed skills are: **_CAPTURE**, **Research**, **FirstPrinciples**,
+**CreateCLI**, **Telos**, **Thinking**, **Investigation**, **ContentAnalysis**,
+**USMetrics**, **Security**, **Parser**, **Documents**, **CreateSkill**,
+**Media** (Mermaid only), **Delegation** (degraded), **Aphorisms**,
+**PAIUpgrade**, **Prompting**, **Evals** (degraded), **Fabric** (reference
+patterns).
+
+For personal URL capture requests, `~/.pai/skills/_CAPTURE/SKILL.md` is the
+canonical route even if the Copilot `skill` tool does not list it. When Robley
+asks to capture, archive, clip, save, remember, or PDF-snapshot a URL, read
+that skill and run `~/.pai/Bin/pai-capture` first. Do not substitute
+`web_fetch`, `curl`, or ad hoc browser capture unless the `_CAPTURE` workflow
+fails, and if it fails, report the exact failure and preserve the attempted
+capture metadata.
 
 | User says | Action |
 |---|---|
+| "capture/save/archive/clip/remember this URL …" / "web clipper …" / "page to PDF …" | Read `~/.pai/skills/_CAPTURE/SKILL.md` and run `~/.pai/Bin/pai-capture` with topic/instruction metadata |
 | "research …" / "do research on …" | Read `Copilot/skills/Research/SKILL.md` and follow Standard mode |
 | "quick research …" | Research skill, Quick mode |
 | "extensive research …" / "deep research …" | Research skill, Extensive mode |
@@ -358,7 +361,22 @@ This ensures startup readback (`§ 1`) always reflects the latest state.
 
 ---
 
-## 15. Core Principles
+## 15. Self-Improvement Trigger
+
+When Robley points out repeated unwanted assistant behavior:
+1. Acknowledge the mismatch plainly.
+2. Stop the behavior immediately.
+3. Trace whether it came from repo instructions, installed PAI instructions,
+   memory, or habit.
+4. If a durable instruction or memory change would prevent recurrence, propose
+   the exact change.
+5. Ask before modifying PAI infrastructure unless Robley explicitly requested
+   the edit.
+6. Capture the correction as durable learning when it affects future behavior.
+
+---
+
+## 16. Core Principles
 
 - **Simplicity first.** Keep changes and instructions minimal and direct.
 - **Match existing patterns.** Consistency beats personal preference.

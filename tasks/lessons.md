@@ -4,6 +4,26 @@
 
 ---
 
+## Session: 2026-06-07 — Hermes hybrid vision clustering
+
+### Lesson: Keep Hermes orchestration high-context and call VL models explicitly
+
+**What happened:** Running cat-photo identity workflows with small VL models as the primary Hermes worker path led to unstable runs and blocked/protocol-violation behavior. A hybrid pattern (Hermes orchestrator on high-context text model + explicit HTTP calls to VL model for image judgments) completed reliably.
+
+**Fix:** Restored Hermes orchestration to the high-context default model and delegated image judgments to `qwen/qwen2.5-vl-7b` via direct LM Studio API calls in a deterministic script.
+
+**Rule:** For Hermes tasks that require long planning plus per-image vision, do not swap the main worker to a short-context VL model. Keep orchestration on a high-context model and treat VL as a tool endpoint.
+
+### Lesson: Broad phenotype clustering over-merges similar tabbies
+
+**What happened:** The completed hybrid run grouped 13 tabby photos together with low average intra-cluster similarity (0.5573), correctly identifying one black singleton but over-merging same-looking tabbies.
+
+**Fix:** Marked output as review-required and documented that same-cat identity needs stricter pairwise evidence than coat/pattern/context similarity alone.
+
+**Rule:** For same-animal identity tasks, default to uncertainty unless stable micro-markers align and no conflicting features are present. Treat environment/context cues as secondary tie-breakers, not primary identity evidence.
+
+---
+
 ## Session: 2026-05-25 — PKM Phase 2 consolidation boundary
 
 ### Lesson: Repeated preference conflicts are instruction defects
@@ -45,6 +65,8 @@
 **Rule:** Do not put Hermes-generated output under an inbox path. Tell Hermes to read from `/workspace/inbox` and write completed work to `/workspace/outbox`; on the VM host those map to `/home/parallels/hermes-inbox` and `/home/parallels/hermes-outbox`.
 
 **2026-06-02 follow-up:** Added `/home/parallels/hermes-work:/workspace/work` as the persistent PVC-style project workspace. For multi-step projects, tell Hermes to build under `/workspace/work/<project-name>` and only copy finished deliverables to `/workspace/outbox/<project-name>`.
+
+**2026-06-05 follow-up:** Added a dedicated Mac-backed Parallels share, `/Users/robley/Documents/Hermes Exchange`, mounted in Ubuntu as `/media/psf/HermesExchange` and into Docker sandboxes as `/workspace/exchange`. The legacy VM roots now symlink into that share: `/home/parallels/hermes-inbox -> /media/psf/HermesExchange/inbox`, `/home/parallels/hermes-work -> /media/psf/HermesExchange/work`, and `/home/parallels/hermes-outbox -> /media/psf/HermesExchange/outbox`. Rule refinement: Hermes persistent artifacts should land under `/workspace/work` or `/workspace/outbox`, which are now Mac-visible through the sandboxed exchange folder.
 
 ---
 

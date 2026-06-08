@@ -1,5 +1,14 @@
 # PAI → Copilot CLI Migration: Evaluation & Plan
 
+## Current status — 2026-06-07
+
+- Completed Hermes photo identity runs with documented artifacts:
+  - baseline output: `/Users/robley/Documents/Hermes Exchange/outbox/photo-organize/cat-photos-20260607/`
+  - hybrid output: `/Users/robley/Documents/Hermes Exchange/outbox/photo-organize/cat-photos-hybrid-20260607/`
+  - process record: `/Users/robley/Documents/Hermes Exchange/outbox/photo-organize/cat-photos-hybrid-20260607/PROCESS_LOG.md`
+- Confirmed current hybrid clustering over-merges visually similar tabby cats (13-photo cluster + 1 singleton), so same-cat identity confidence is not yet production-grade.
+- Work is intentionally paused per user direction ("don't do any more").
+
 ## Current status — 2026-05-25
 
 - Created `PKM-phase-2-plan.md` as the editable local plan for PKM/DEVONthink/Data consolidation. No PKM, DEVONthink, or `WorkingStorage/Data` folders were moved or modified.
@@ -8,6 +17,7 @@
 - OneDrive incident state: removed the nested OneDrive symlink/cache entries created by a stale "OneDrive 2" install and verified the main OneDrive root and PKM folders are intact. Remaining cleanup is stale macOS File Provider/LaunchServices registration for "OneDrive 2" and empty ACL-protected `~/Library/CloudStorage/OneDrive2-GreatBayLabs`.
 - Completed X-post capture standardization: Parser now routes "save X post" requests to `SaveXPostToPKM`, which uses `/Users/robley/projects/youtube-transcript-archiver/save_x_content.sh`.
 - Completed cross-directory PAI activation: `pai-copilot` exports `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` so PAI mode instructions load outside this repository.
+- Completed Hermes Mac exchange sandbox: `/Users/robley/Documents/Hermes Exchange` is shared into Ubuntu as `/media/psf/HermesExchange`, mounted into Hermes Docker sandboxes as `/workspace/exchange`, and backs `/workspace/inbox`, `/workspace/work`, and `/workspace/outbox`.
 - Open follow-up: the untracked transcript file `Every_Claude_Code_Memory_System_Compared_So_You_Do_UHVFcUzAGlM_20260426_183504_transcript.txt` remains uncommitted because it was not part of this session's intentional repo changes.
 
 ## How You Interact With PAI (The User Experience)

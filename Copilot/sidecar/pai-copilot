@@ -6,7 +6,7 @@
 # (UserPromptSubmit, Stop) via instruction-based rules in copilot-instructions.md.
 #
 # Responsibilities:
-#   PRE:   Export env vars, ensure voice server, set tab title, log session start
+#   PRE:   Export env vars, set tab title, log session start
 #   RUN:   exec copilot with any args the user passed
 #   POST:  Log session end, reset tab title (on normal exit)
 
@@ -16,7 +16,6 @@ PAI_DIR="${PAI_DIR:-$HOME/.pai}"
 PAI_STATE_DIR="$PAI_DIR/state"
 PAI_LOG_DIR="$PAI_DIR/logs"
 PAI_INSTRUCTIONS_DIR="$PAI_DIR/instructions"
-PAI_VOICE_URL="${PAI_VOICE_URL:-http://localhost:8888}"
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 
 mkdir -p "$PAI_STATE_DIR" "$PAI_LOG_DIR" "$PAI_INSTRUCTIONS_DIR"
@@ -28,20 +27,6 @@ log() {
 set_tab_title() {
   # OSC 0 sets icon + window title in most terminals (iTerm2, Kitty, Terminal.app).
   printf '\033]0;%s\007' "$1"
-}
-
-start_voice_server() {
-  if curl -sf "$PAI_VOICE_URL/health" >/dev/null 2>&1; then
-    log "voice-server already running"
-    return 0
-  fi
-
-  local start_script="$PAI_DIR/VoiceServer/start.sh"
-  if [[ -x "$start_script" ]]; then
-    "$start_script" >/dev/null 2>&1 || log "voice-server failed to start"
-  else
-    log "voice-server start script not found at $start_script"
-  fi
 }
 
 materialize_startup_digest() {
@@ -107,7 +92,6 @@ pre_session() {
   fi
 
   set_tab_title "PAI"
-  start_voice_server
   capture_engagement
   materialize_startup_digest
 

@@ -50,11 +50,11 @@ source ~/.zshrc        # or ~/.bashrc
 The installer:
 
 - Creates `~/.pai/` with all runtime files (skills, tools, memory directories)
-- Adds `PAI_DIR` and `PAI_VOICE_URL` exports to your shell RC
+- Adds a `PAI_DIR` export to your shell RC
 - Adds a `pai` alias that launches the sidecar wrapper
-- Warns (but doesn't fail) if `bun`, `copilot`, or macOS `say` are missing
+- Warns (but doesn't fail) if `copilot` is missing
 
-**Prerequisites:** `bash`, `curl`, `git` (required); `copilot`, `bun`, `say` (recommended).
+**Prerequisites:** `bash`, `curl`, `git` (required); `copilot` (recommended).
 
 Re-running `install.sh` is safe — it's idempotent.
 
@@ -239,24 +239,9 @@ PAI replies in MINIMAL mode: `Recorded rating: 7.`
 
 ## Voice notifications
 
-At the end of every non-MINIMAL response, PAI speaks an 8–16 word summary via the local voice server (macOS `say`).
-
-**Control voice output:**
-
-```bash
-# Stop the voice server
-pkill -f "voice-server" || lsof -ti:8888 | xargs kill
-
-# Restart manually
-~/.pai/VoiceServer/start.sh
-
-# Test it
-curl -sS -X POST http://localhost:8888/notify \
-  -H 'content-type: application/json' \
-  -d '{"message":"PAI voice is working"}'
-```
-
-If the voice server isn't running, PAI continues silently — no errors.
+Voice/TTS notifications are disabled in PAI Copilot. The assistant should not
+call local notification endpoints such as `http://localhost:8888/notify`, and
+the sidecar does not start the voice server.
 
 ---
 
@@ -345,11 +330,7 @@ Run `source ~/.zshrc` (or `~/.bashrc`), or open a new terminal. If still missing
 
 ### No voice output
 
-Check the voice server:
-```bash
-curl -sf http://localhost:8888/health
-```
-If it fails, start it manually: `~/.pai/VoiceServer/start.sh`. On non-macOS, voice is a silent no-op (the server only wraps macOS `say`).
+This is expected. Voice/TTS notifications are disabled in PAI Copilot.
 
 ### PAI didn't greet me / didn't reference recent work
 

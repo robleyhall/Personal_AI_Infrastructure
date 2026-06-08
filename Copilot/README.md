@@ -102,7 +102,7 @@ pai                   # launches copilot via the sidecar
 
 The installer now also copies `Algorithm.md` and `ContextRouting.md` into
 `~/.pai/`, creates `~/.pai/Bin/` for generated personal CLIs, and adds
-`PAI_DIR` plus `PAI_VOICE_URL` exports to the shell profile.
+`PAI_DIR` to the shell profile.
 
 ### Sidecar file-access allowlist
 
@@ -124,19 +124,14 @@ and makes the full startup readback reliable.
 ## Verify
 
 ```bash
-# 1. Voice server
-curl -sS -X POST http://localhost:8888/notify \
-  -H 'content-type: application/json' \
-  -d '{"message":"PAI spike is alive"}'
-
-# 2. Sidecar health
+# 1. Sidecar health
 ~/.pai/sidecar/pai-copilot --version    # should pass through to copilot --version
 
-# 3. Instructions loaded
+# 2. Instructions loaded
 # In a `pai` session, the first response should start with a mode header
 # (MINIMAL / NATIVE / ALGORITHM) per .github/copilot-instructions.md §2.
 
-# 4. Research memory promotion
+# 3. Research memory promotion
 cat <<'EOF' | ~/.pai/tools/save-research-memory.sh --topic "test topic" --mode "quick"
 - One durable insight
 - One useful follow-up

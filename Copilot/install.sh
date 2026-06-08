@@ -39,16 +39,13 @@ check_deps() {
   require bash
   require curl
   require git
-  command -v bun     >/dev/null 2>&1 || warn "bun not found — voice server will not start"
   command -v copilot >/dev/null 2>&1 || warn "copilot CLI not found — install from https://docs.github.com/copilot"
-  command -v say     >/dev/null 2>&1 || warn "macOS \`say\` not found — voice output will fail silently"
 }
 
 install_tree() {
   say "installing to $PAI_DIR"
-  mkdir -p "$PAI_DIR"/{skills,tools,VoiceServer,sidecar,instructions/.github,Bin,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/LEARNING/ALGORITHM,MEMORY/LEARNING/SYSTEM,MEMORY/RESEARCH,MEMORY/WORK,MEMORY/WISDOM/FRAMES,MEMORY/RELATIONSHIP,USER/SKILLCUSTOMIZATIONS,state,logs}
+  mkdir -p "$PAI_DIR"/{skills,tools,sidecar,instructions/.github,Bin,MEMORY/LEARNING/SIGNALS,MEMORY/LEARNING/FAILURES,MEMORY/LEARNING/ALGORITHM,MEMORY/LEARNING/SYSTEM,MEMORY/RESEARCH,MEMORY/WORK,MEMORY/WISDOM/FRAMES,MEMORY/RELATIONSHIP,USER/SKILLCUSTOMIZATIONS,state,logs}
 
-  rsync -a --delete "$SRC/VoiceServer/" "$PAI_DIR/VoiceServer/"
   rsync -a --delete "$SRC/sidecar/"     "$PAI_DIR/sidecar/"
   rsync -a --delete "$SRC/tools/"       "$PAI_DIR/tools/"
   rsync -a           "$SRC/skills/"      "$PAI_DIR/skills/"
@@ -57,9 +54,7 @@ install_tree() {
   install -m 0644 "$SRC/ContextRouting.md"   "$PAI_DIR/ContextRouting.md"
   install -m 0644 "$REPO_ROOT/.github/copilot-instructions.md" "$PAI_DIR/instructions/AGENTS.md"
   install -m 0644 "$REPO_ROOT/.github/copilot-instructions.md" "$PAI_DIR/instructions/.github/copilot-instructions.md"
-
   chmod +x \
-    "$PAI_DIR/VoiceServer/start.sh" \
     "$PAI_DIR/sidecar/pai-copilot" \
     "$PAI_DIR/tools/save-research-memory.sh" \
     "$PAI_DIR/tools/capture-rating.sh" \
@@ -81,7 +76,6 @@ install_alias() {
   append_shell_line ""
   append_shell_line "# PAI (Copilot edition)"
   append_shell_line "export PAI_DIR=\"\$HOME/.pai\""
-  append_shell_line "export PAI_VOICE_URL=\"http://localhost:8888\""
   append_shell_line "$line"
   say "ensured shell exports and alias in $SHELL_RC — run: source $SHELL_RC"
 }
