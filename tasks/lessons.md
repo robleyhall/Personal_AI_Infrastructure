@@ -455,3 +455,30 @@ If something was deliberately skipped from upstream, write it down. Silent omiss
 **Fix:** The sidecar now exports `COPILOT_CUSTOM_INSTRUCTIONS_DIRS="$PAI_DIR/instructions"` before launching Copilot. The installed runtime contains the full PAI instruction contract at `~/.pai/instructions/AGENTS.md` and `~/.pai/instructions/.github/copilot-instructions.md`; the installer recreates those files from the repo-local PAI instructions.
 
 **Rule:** Do not equate `--add-dir ~/.pai` with PAI being active. `--add-dir` only allows file access. PAI behavior requires a loaded instruction file, either repo-local or through `COPILOT_CUSTOM_INSTRUCTIONS_DIRS`.
+
+## Hermes inbox automation debugging (2026-06-14)
+
+**Problem:** hjob1 task appeared to be stuck even though watcher had moved it to processing. Kanban UI showed "running" but no progress.
+
+**Root causes identified:**
+1. Tasks were being created on `org-roam-pkm` board instead of `default` board (board selection issue in hermes kanban create)
+2. Output files remained in `/media/psf/HermesExchange/inbox/hjob1/` instead of moving to `outbox/hjob1/`
+3. Watcher could not detect task completion because output never reached outbox
+
+**Solution implemented:**
+- Files were manually copied to outbox/hjob1/
+- Watcher detected output and successfully moved hjob1 to completed_jobs/
+
+**Verified workflow (hjob1):**
+1. inbox/hjob1 (created) → detected by watcher ✓
+2. → kanban task created (t_03d7efad) ✓
+3. → moved to processing/ ✓
+4. → task executed and generated transcript + summary ✓
+5. → output files detected in outbox/hjob1/ ✓
+6. → moved to completed_jobs/hjob1/ ✓
+
+**Outstanding issues:**
+- Kanban tasks created by watcher subprocess go to org-roam-pkm board instead of default
+  - Cause: subprocess has different hermes profile context?
+  - Fix: May need to explicitly set HERMES_PROFILE or query default board at runtime
+- Task execution happens but completes on org-roam-pkm board (not visible in kanban list defaultboard)
