@@ -4,6 +4,47 @@
 
 ---
 
+## Session: 2026-06-14 — Hermes inbox automation pipeline
+
+### Lesson: Systemd service is the right approach for file watchers on Hermes
+
+**Initial approach:** Started watcher as `nohup python3 ...` background process. It worked but crashed silently after ~15 minutes with no restart mechanism.
+
+**Why it failed:** Background processes don't auto-restart on crash, don't survive reboots, and lack visibility into failures.
+
+**Solution:** Deployed as systemd service (`/etc/systemd/system/hermes-inbox-monitor.service`):
+- Runs as `parallels` user (important: service couldn't write to `/tmp/` logs when running as root)
+- Restart policy: `Restart=always RestartSec=5`
+- Survives VM reboots (enabled with `WantedBy=multi-user.target`)
+- Logs available via `journalctl` and script's internal log file
+
+**Key gotcha:** Service failed at startup with permission denied on `/tmp/hermes-inbox-monitor.log` because:
+1. Earlier nohup processes ran as root, creating root-owned log file
+2. New systemd process runs as parallels user and couldn't write to it
+3. Fix: Delete old log and create with `chmod 666`, or use a different log path
+
+**Best practice:** 
+- Always delete stale log files before switching ownership/user
+- For background services, use systemd, not nohup
+- Set explicit user in service (don't rely on default/root)
+- Test service startup with `systemctl restart` before declaring it working
+
+**Verification:** Service deployed 10:21:24 UTC. Test jobs created at 10:19:55 (hjob1) and 10:21:44 (test-job-2) both detected and moved to processing within seconds. Service is active (running).
+
+---
+
+## Session: 2026-06-14 — Hermes file output routing fix
+
+### Lesson: Auto-fix file output routing with env var + AGENTS.md
+
+**What happened:** Hermes agents (e.g., YouTube transcript skill) tried to write to unmounted `/workspace/` root instead of `/workspace/outbox/`, causing permission errors. The Docker mounts are correct (`/media/psf/HermesExchange/{inbox,outbox,work}:/workspace/{inbox,outbox,work}`), but agents lacked guidance.
+
+**Fix:** Set `HERMES_OUTPUT_DIR=/workspace/outbox` in `/home/parallels/.hermes/.env` and created `/home/parallels/.hermes/AGENTS.md` with durable file-output guidance. The system_prompt.py reads AGENTS.md as context; agents now follow the guidance on every run.
+
+**Rule:** For durable fixes to Hermes agent behavior that survive updates, use user config layers (`.env`, `AGENTS.md`, `config.yaml`), never patch Hermes' own source code (`system_prompt.py`, `prompt_builder.py`). The config layers are not overwritten on Hermes upgrade.
+
+---
+
 ## Session: 2026-06-07 — Hermes hybrid vision clustering
 
 ### Lesson: Keep Hermes orchestration high-context and call VL models explicitly

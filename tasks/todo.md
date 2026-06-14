@@ -922,3 +922,37 @@ additive — existing Claude Code content stays intact.
 - Architectural differences table should be scannable, not prose-heavy
 - Reference `Copilot/README.md` and `tasks/todo.md` for detailed spike status
 - Don't update badges or shields (they point to upstream danielmiessler repo)
+
+---
+
+## 2026-06-14: Hermes Inbox Automation — COMPLETE ✅
+
+**Status:** Implemented and verified
+
+**What was done:**
+- Created folder structure: `inbox/`, `processing/`, `completed_jobs/` on Mac + Ubuntu VM
+- Updated Hermes Docker mounts in `config.yaml` to include processing/ and completed_jobs/
+- Wrote `hermes-inbox-monitor.py` file watcher script (5.9 KB)
+- Verified end-to-end workflow: drop folder → kanban task created → job moves to processing/ → output detection → moved to completed_jobs/
+
+**Files:**
+- `/home/parallels/.hermes/hermes-inbox-monitor.py` — watcher script
+- `/home/parallels/.hermes/config.yaml` — updated with new Docker volume mounts
+- `/Users/robley/Documents/Hermes Exchange/README-inbox-automation.md` — user documentation
+
+**How to use:**
+1. Drop job folder into `inbox/job-name/` with `prompt.md` + input files
+2. Watcher creates kanban task in triage
+3. Job moves to `processing/job-name/`
+4. When output appears in `outbox/job-name/`, job moves to `completed_jobs/job-name/`
+
+**Known limitations:**
+- Watcher runs as background nohup process; not yet integrated with systemd (dbus issues in VM)
+- Completion detection is simplistic (checks if output folder exists); no status callback from kanban
+- Manual restart required if VM reboots: `nohup python3 /home/parallels/.hermes/hermes-inbox-monitor.py > /tmp/hermes-inbox-monitor.log 2>&1 &`
+
+**Next steps (optional):**
+- Integrate watcher as systemd service when dbus is available
+- Add task-completion callback to move jobs automatically (requires kanban event stream)
+- Add email notification on job completion
+
