@@ -1,5 +1,25 @@
 # Hermes Inbox Automation Lessons
 
+## Storage/Artifact contract hardening (2026-06-17)
+
+**Problem:** Documentation drifted from live behavior, and direct dashboard cards could fail or scatter artifacts due to ambiguous workspace/output assumptions.
+
+**Fixes applied:**
+- Created missing Mac/VM-backed `work/` directory at `/media/psf/HermesExchange/work` (Mac: `~/Documents/Hermes Exchange/work`).
+- Recycled stale Hermes containers so they rehydrate from current `terminal.docker_volumes`.
+- Updated watcher contract so workers read from `/workspace/inbox/<job>` and write outputs to `/workspace/outbox/<job>`.
+- Kept `processing/` and `completed_jobs/` as input-state management only.
+- Added global worker guidance in `/home/parallels/.hermes/AGENTS.md`:
+  - direct/dashboard tasks default to `/workspace/outbox/dashboard/<task-id-or-slug>/`
+  - no final artifacts in `/tmp`.
+
+**Kanban workspace bug (separate from file bridge):**
+- Root cause for dashboard task failures: tasks on `org-roam-pkm` had `workspace_path='managed_id'` (non-absolute).
+- Repaired affected tasks to `workspace_kind='scratch'` with `workspace_path=NULL`.
+- Added SQLite triggers on board DB(s) to auto-normalize future `managed_id` writes to scratch/null.
+
+**Outcome:** one consistent durable output root for both flows: `outbox/`.
+
 ## Workflow Design (2026-06-14)
 
 **Correct job lifecycle:**
