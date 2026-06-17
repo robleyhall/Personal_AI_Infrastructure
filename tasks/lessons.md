@@ -6,11 +6,16 @@
 
 **Fixes applied:**
 - Created missing Mac/VM-backed `work/` directory at `/media/psf/HermesExchange/work` (Mac: `~/Documents/Hermes Exchange/work`).
+- Added Mac/VM-backed projects share for durable repo work:
+  - Mac: `~/Documents/Hermes Projects/projects`
+  - VM: `/media/psf/HermesProjects/projects`
+  - Container: `/workspace/projects`
 - Recycled stale Hermes containers so they rehydrate from current `terminal.docker_volumes`.
 - Updated watcher contract so workers read from `/workspace/inbox/<job>` and write outputs to `/workspace/outbox/<job>`.
 - Kept `processing/` and `completed_jobs/` as input-state management only.
 - Added global worker guidance in `/home/parallels/.hermes/AGENTS.md`:
   - direct/dashboard tasks default to `/workspace/outbox/dashboard/<task-id-or-slug>/`
+  - repo/code tasks must use `/workspace/projects/<repo-or-experiment>/`
   - no final artifacts in `/tmp`.
 
 **Kanban workspace bug (separate from file bridge):**
@@ -19,6 +24,7 @@
 - Added SQLite triggers on board DB(s) to auto-normalize future `managed_id` writes to scratch/null.
 
 **Outcome:** one consistent durable output root for both flows: `outbox/`.
+Repo work is now durable under a separate shared root: `projects/`.
 
 ## Workflow Design (2026-06-14)
 

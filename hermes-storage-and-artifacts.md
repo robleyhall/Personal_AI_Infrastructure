@@ -9,6 +9,7 @@ This is the source-of-truth mapping for where Hermes inputs, working state, and 
 | Inbox jobs (input) | `/Users/robley/Documents/Hermes Exchange/inbox/` | `/media/psf/HermesExchange/inbox/` | `/workspace/inbox/` |
 | Processing snapshots (input state) | `/Users/robley/Documents/Hermes Exchange/processing/` | `/media/psf/HermesExchange/processing/` | `/workspace/processing/` |
 | Durable output artifacts | `/Users/robley/Documents/Hermes Exchange/outbox/` | `/media/psf/HermesExchange/outbox/` | `/workspace/outbox/` |
+| Durable repo projects/worktrees | `/Users/robley/Documents/Hermes Projects/projects/` | `/media/psf/HermesProjects/projects/` | `/workspace/projects/` |
 | Archived input snapshots | `/Users/robley/Documents/Hermes Exchange/completed_jobs/` | `/media/psf/HermesExchange/completed_jobs/` | `/workspace/completed_jobs/` |
 | Optional scratch | `/Users/robley/Documents/Hermes Exchange/work/` | `/media/psf/HermesExchange/work/` | `/workspace/work/` |
 | Full exchange root | `/Users/robley/Documents/Hermes Exchange/` | `/media/psf/HermesExchange/` | `/workspace/exchange/` |
@@ -28,9 +29,12 @@ This is the source-of-truth mapping for where Hermes inputs, working state, and 
 
 - Cards should write durable outputs to:
   - `/workspace/outbox/dashboard/<task-id-or-slug>/`
+- If the task is repo/code work, create/use the repository at:
+  - `/workspace/projects/<repo-or-experiment>/`
 - Include `RESULT.md` in that folder listing generated artifacts.
 
-**Rule:** final artifacts do not live in `/tmp`; `/workspace/outbox/...` is canonical.
+**Rule:** final artifacts do not live in `/tmp`.  
+Use `/workspace/outbox/...` for artifacts and `/workspace/projects/...` for durable git repos/worktrees.
 
 ## Why this contract exists
 
@@ -58,4 +62,3 @@ prlctl exec "Ubuntu 24.04.3 ARM64" tail -f /tmp/hermes-inbox-monitor.log
 # verify outputs are on Mac
 ls -la "/Users/robley/Documents/Hermes Exchange/outbox/"
 ```
-
