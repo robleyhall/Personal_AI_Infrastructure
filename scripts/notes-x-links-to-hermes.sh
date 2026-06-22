@@ -56,7 +56,9 @@ NOTE_COUNT=$(echo "$RAW_DUMP" | grep -c "x.com/\|twitter.com/" || true)
 log "Found notes with X/Twitter content, extracting URLs..."
 
 # --- Step 2: Parse URLs and note IDs in Python ---
-PARSE_OUTPUT=$(echo "$RAW_DUMP" | python3 - "$TIMESTAMP" "$LOG_DIR" "$DRY_RUN" <<'PY'
+# Write Python script to temp file to avoid pipe+heredoc conflict
+PYTHON_SCRIPT=$(mktemp)
+cat > "$PYTHON_SCRIPT" <<'PY'
 import sys, re
 
 ts, log_dir, dry_run_str = sys.argv[1:]
@@ -67,9 +69,9 @@ X_URL_RE = re.compile(r'https?://(?:www\.)?(?:twitter\.com|x\.com)/[^\s"\'<>&,\)
 raw = sys.stdin.read().strip()
 print(f"[Python] Raw input length: {len(raw)} chars", file=sys.stderr, flush=True)
 
-# AppleScript returns a list as records joined by ", \n" (comma-space-newline)
+# AppleScript returns a list as records joined by "\n, " (newline-comma-space)
 # Each record: NOTE_ID<TAB>TITLE<TAB>HTML_BODY
-records_raw = re.split(r',\s*\n', raw)
+records_raw = re.split(r'\n,\s*', raw)
 print(f"[Python] Parsed {len(records_raw)} note record(s)", file=sys.stderr, flush=True)
 
 all_urls = []
@@ -101,13 +103,20 @@ print(f"[Python] Done: {len(note_ids)} note(s) with {len(unique_urls)} unique UR
 print("URLS:" + '\n'.join(unique_urls))
 print("NOTE_IDS:" + '\n'.join(note_ids))
 PY
-)
 
-URLS_SECTION=$(echo "$PARSE_OUTPUT" | awk '/^URLS:/{found=1; sub(/^URLS:/,""); print; next} found && /^NOTE_IDS:/{exit} found{print}')
-NOTE_IDS_SECTION=$(echo "$PARSE_OUTPUT" | awk '/^NOTE_IDS:/{found=1; sub(/^NOTE_IDS:/,""); print; next} found{print}')
+PARSE_OUTPUT=$(echo "$RAW_DUMP" | python3 "$PYTHON_SCRIPT" "$TIMESTAMP" "$LOG_DIR" "$DRY_RUN" 2>&1)
+rm -f "$PYTHON_SCRIPT"
+
+# PARSE_OUTPUT contains both stderr (progress logs) and stdout (URLS:/NOTE_IDS:)
+# Separate them for processing
+PARSE_STDOUT=$(echo "$PARSE_OUTPUT" | grep -v "^\[Python\]" || true)
+PARSE_STDERR=$(echo "$PARSE_OUTPUT" | grep "^\[Python\]" || true)
+
+URLS_SECTION=$(echo "$PARSE_STDOUT" | awk '/^URLS:/{found=1; sub(/^URLS:/,""); print; next} found && /^NOTE_IDS:/{exit} found{print}')
+NOTE_IDS_SECTION=$(echo "$PARSE_STDOUT" | awk '/^NOTE_IDS:/{found=1; sub(/^NOTE_IDS:/,""); print; next} found{print}')
 
 # Log stderr lines from Python (progress and debug info)
-echo "$PARSE_OUTPUT" | grep "^\[Python\]" | tee -a "$LOG"
+echo "$PARSE_STDERR" | tee -a "$LOG"
 
 URL_COUNT=$(echo "$URLS_SECTION" | grep -c "http" || true)
 log "$URL_COUNT unique X/Twitter URL(s) found"
