@@ -41,6 +41,20 @@ materialize_startup_digest() {
   fi
 }
 
+# mesh_pre_session — Cognitive Mesh integration (best-effort, no-op unless
+# $COGMESH points at a mesh root). Materializes the mesh startup digest and
+# refreshes its search index so a pai-launched session starts current on both
+# memory systems. Mesh scripts live in the mesh code repo ($COGMESH_CODE, or
+# the conventional checkout path).
+mesh_pre_session() {
+  [[ -n "${COGMESH:-}" && -f "$COGMESH/CONVENTIONS.md" ]] || return 0
+  local mesh_scripts="${COGMESH_CODE:-$HOME/projects/cognitive-mesh}/automation/scripts"
+  [[ -d "$mesh_scripts" ]] || { log "mesh: scripts not found at $mesh_scripts (skipped)"; return 0; }
+  bash "$mesh_scripts/mesh-digest.sh" --write >/dev/null 2>&1 || true
+  python3 "$mesh_scripts/mesh_index.py" build --root "$COGMESH" --quiet >/dev/null 2>&1 || true
+  log "mesh: digest + index refreshed (root=$COGMESH)"
+}
+
 # capture_engagement — record one line of project-engagement signal per launch.
 # Only fires when $PWD is inside a git repo; otherwise no-op. Appends JSONL to
 # $PAI_DIR/MEMORY/WORK/projects/engagement.jsonl. Per-project markdown files
@@ -94,6 +108,7 @@ pre_session() {
   set_tab_title "PAI"
   capture_engagement
   materialize_startup_digest
+  mesh_pre_session
 
   log "custom-instructions-dir=$PAI_INSTRUCTIONS_DIR"
   log "session-start id=$SESSION_ID cwd=$PWD"
@@ -278,8 +293,12 @@ main() {
   # Forward all args + signals to copilot. We intentionally do NOT wrap stdin/stdout
   # in a PTY — Copilot CLI manages its own TUI and we want zero interference.
   # Always allow file access to $PAI_DIR so PAI memory/tools/skills are reachable
-  # without per-session /add-dir prompts.
-  copilot --add-dir "$PAI_DIR" "$@"
+  # without per-session /add-dir prompts. When a Cognitive Mesh root is
+  # configured, add it too so mesh instructions (digest, mesh search) work
+  # without prompts.
+  local add_dirs=(--add-dir "$PAI_DIR")
+  [[ -n "${COGMESH:-}" && -d "${COGMESH:-}" ]] && add_dirs+=(--add-dir "$COGMESH")
+  copilot "${add_dirs[@]}" "$@"
   local code=$?
 
   post_session "$code"
